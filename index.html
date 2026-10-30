@@ -1,0 +1,1167 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Статфизика</title>
+<script>window.MathJax={tex:{inlineMath:[['$','$']]},svg:{fontCache:'global'}};</script>
+<script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js" async></script>
+<style>
+*{box-sizing:border-box;margin:0;padding:0;user-select:none;font-family:sans-serif}
+body{background:#f4f6fb;color:#1a1a2e;padding:20px}
+.screen{display:none;max-width:500px;margin:0 auto}.screen.active{display:block}
+h1{font-size:22px;margin-bottom:10px}
+.nav-bar{display:flex;justify-content:space-around;background:#fff;padding:10px;border-radius:12px;margin-bottom:20px;box-shadow:0 2px 8px rgba(0,0,0,0.05)}
+.nav-btn{background:none;border:none;font-size:15px;font-weight:bold;color:#888;cursor:pointer;padding:5px 15px;border-radius:8px}
+.nav-btn.active{background:#4a6cf7;color:#fff}
+.topic-card{background:#fff;padding:16px;border-radius:12px;margin-bottom:10px;box-shadow:0 2px 8px rgba(0,0,0,0.05);display:flex;align-items:center;justify-content:space-between;cursor:pointer}
+.topic-card-left{flex:1}
+.formula-item{background:#fff;padding:14px;border-radius:12px;margin-bottom:10px;cursor:pointer;display:flex;justify-content:space-between;align-items:center}
+.badge{font-size:11px;padding:4px 8px;border-radius:8px;font-weight:bold;white-space:nowrap}
+.new{background:#e5e7eb;color:#555}.learning{background:#fef3c7;color:#b45309}.learned{background:#d1fae5;color:#065f46}
+.btn{background:#4a6cf7;color:#fff;padding:12px;border:none;border-radius:10px;font-size:16px;font-weight:bold;width:100%;cursor:pointer;margin-top:10px}
+.back{background:none;border:none;color:#4a6cf7;font-size:16px;cursor:pointer;margin-bottom:15px;font-weight:bold}
+.card-stack{position:relative;height:auto;min-height:380px;margin-bottom:20px}
+.swipe-card{position:relative;background:#fff;border-radius:20px;box-shadow:0 5px 20px rgba(0,0,0,0.1);display:flex;flex-direction:column;justify-content:center;align-items:center;padding:20px;overflow-y:auto;touch-action:none;word-break:break-word;white-space:normal;}
+.formula-txt{font-size:20px;text-align:center;width:100%;overflow-x:auto;margin-bottom:20px;min-height:60px;display:flex;justify-content:center;align-items:center;line-height:1.4;}
+.formula-html{font-size:14px;text-align:left;width:100%;overflow-x:auto;margin-bottom:20px;line-height:1.4;}
+.formula-img{max-width:100%;max-height:100px;object-fit:contain;}
+.input-ans{width:100%;padding:12px;border:2px solid #cbd5e1;border-radius:10px;font-size:16px;outline:none;transition:all 0.2s;text-align:center;margin-bottom:10px}
+.input-ans.correct{border-color:#10b981;background:#d1fae5;color:#065f46}
+.input-ans.wrong{border-color:#ef4444;background:#fee2e2;color:#991b1b}
+.actions{display:flex;justify-content:space-around;margin-top:10px}
+.actions button{width:70px;height:70px;border-radius:50%;border:none;font-size:28px;cursor:pointer;box-shadow:0 4px 10px rgba(0,0,0,0.1)}
+.btn-yes{background:#d1fae5;color:#10b981}.btn-no{background:#fee2e2;color:#ef4444}
+.opt{background:#f1f5f9;padding:14px;border-radius:10px;margin-bottom:8px;text-align:center;cursor:pointer;font-size:14px;width:100%;border:2px solid transparent;transition:all 0.2s;line-height:1.3;}
+.opt.correct{background:#d1fae5;border-color:#10b981;color:#065f46}
+.opt.wrong{background:#fee2e2;border-color:#ef4444;color:#991b1b}
+.modal{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.5);align-items:center;justify-content:center;padding:20px;z-index:99}
+.modal.active{display:flex}.modal-content{background:#fff;padding:20px;border-radius:16px;max-width:500px;width:100%;max-height:85vh;overflow-y:auto;word-break:break-word;white-space:normal;}
+.stat-box{background:#fff;padding:20px;border-radius:16px;box-shadow:0 2px 8px rgba(0,0,0,0.05);margin-bottom:15px;}
+.chart-container{display:flex;align-items:flex-end;height:150px;gap:10px;margin-top:20px;padding-bottom:10px;border-bottom:2px solid #e5e7eb}
+.chart-col{flex:1;display:flex;flex-direction:column;justify-content:flex-end;align-items:center;gap:2px;height:100%;position:relative}
+.bar-learned{width:100%;background:#10b981;border-radius:4px 4px 0 0;min-height:2px}
+.bar-reviewed{width:100%;background:#4a6cf7;border-radius:4px 4px 0 0;min-height:2px}
+.chart-label{font-size:10px;color:#888;margin-top:5px;text-align:center;line-height:1.2;}
+.legend{display:flex;gap:15px;font-size:13px;margin-top:15px;justify-content:center}
+.legend span{display:flex;align-items:center;gap:5px}
+.dot{width:10px;height:10px;border-radius:50%;display:inline-block}
+input[type="checkbox"]{width:22px;height:22px;cursor:pointer;accent-color:#4a6cf7}
+.btn-clean {
+    background: #fff; color: #333; border: 1px solid #ccc; padding: 14px;
+    border-radius: 10px; font-size: 16px; font-weight: bold; width: 100%;
+    cursor: pointer; margin-top: 12px; transition: all 0.2s;
+    display: flex; align-items: center; justify-content: center; gap: 8px;
+}
+.btn-clean:active { background: #eee; border-color: #999; }
+.stat-row{display:flex;gap:10px;margin-bottom:15px;}
+.stat-card{background:#fff;padding:15px;border-radius:12px;flex:1;box-shadow:0 2px 8px rgba(0,0,0,0.05);text-align:center;}
+.stat-val{font-size:24px;font-weight:bold;color:#4a6cf7;margin-bottom:5px;}
+.stat-name{font-size:12px;color:#888;}
+.form-group{margin-bottom:12px;}
+.form-group label{display:block;font-size:13px;color:#555;margin-bottom:4px;font-weight:bold;}
+.form-group input, .form-group select, .form-group textarea{width:100%;padding:10px;border:1px solid #cbd5e1;border-radius:8px;font-size:14px;font-family:inherit;}
+
+/* Таблицы для правил и задач */
+table.rule-table { width: 100%; border-collapse: collapse; margin: 10px 0; font-size: 13px; word-break: break-word; }
+table.rule-table th, table.rule-table td { border: 1px solid #cbd5e1; padding: 6px; text-align: left; vertical-align: top; }
+table.rule-table th { background-color: #f1f5f9; font-weight: bold; color: #333; }
+
+/* Сетка в 2 колонки для терминов и задач */
+.grid-container {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 10px;
+    margin-bottom: 20px;
+}
+.grid-container .task-group-title {
+    grid-column: 1 / -1; /* Заголовки растягиваются на 2 колонки */
+    margin-top: 10px;
+    margin-bottom: 0px;
+}
+.task-box { background: #fff; border-radius: 12px; padding: 16px; box-shadow: 0 2px 8px rgba(0,0,0,0.05); cursor: pointer; border-left: 3px solid #ccc; display: flex; flex-direction: column; justify-content: center;}
+.task-box h3 { font-size: 13px; margin-bottom: 6px; color: #1a1a2e; }
+.task-box p { font-size: 12px; color: #666; line-height: 1.4; }
+
+/* Адаптивность: на узких экранах возвращаем 1 колонку */
+@media (max-width: 400px) {
+    .grid-container {
+        grid-template-columns: 1fr;
+    }
+    .task-box h3 { font-size: 15px; }
+    .task-box p { font-size: 13px; }
+}
+
+.task-group-title { font-size: 15px; font-weight: bold; color: #4a6cf7; margin: 20px 0 10px 0; padding-bottom: 5px; border-bottom: 1px solid #e5e7eb; }
+.latex-help { display: flex; flex-wrap: wrap; gap: 5px; margin-top: 5px; margin-bottom: 10px; max-height: 120px; overflow-y: auto; padding-bottom: 5px; }
+.latex-help button { background: #e2e8f0; border: none; padding: 5px 8px; border-radius: 6px; font-size: 12px; cursor: pointer; color: #333; }
+.latex-help button:active { background: #cbd5e1; }
+.book-card { background: #fff; padding: 16px; border-radius: 12px; margin-bottom: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.05); cursor: pointer; transition: transform 0.1s; border-left: 4px solid #4a6cf7; }
+.book-card:active { transform: scale(0.98); }
+.book-card h3 { font-size: 16px; margin-bottom: 4px; color: #1a1a2e; }
+.book-card p { font-size: 13px; color: #666; }
+.mode-card { background: #fff; padding: 16px; border-radius: 12px; margin-bottom: 10px; box-shadow: 0 2px 8px rgba(0,0,0,0.05); cursor: pointer; border-left: 4px solid #8b5cf6; }
+.mode-card h3 { font-size: 15px; margin-bottom: 4px; color: #1a1a2e; }
+.mode-card p { font-size: 13px; color: #666; }
+</style>
+</head>
+<body>
+<div class="nav-bar">
+<button class="nav-btn active" id="navBtnHome" onclick="switchTab('home')">Главная</button>
+<button class="nav-btn" id="navBtnStats" onclick="switchTab('stats')">Статистика</button>
+</div>
+
+<div id="screenHome" class="screen active">
+<h1>📚 Главная</h1>
+<button class="btn-clean" onclick="switchTab('cats')" style="margin-top:20px;">📂 Выбрать категорию</button>
+<button class="btn-clean" onclick="startTrainAll()">🎯 Учить формулы</button>
+<button class="btn-clean" onclick="startTrainReview()">🔄 Повторить</button>
+<button class="btn-clean" onclick="switchTab('modes')">🧠 Типы тренировок</button>
+<button class="btn-clean" onclick="switchTab('tasks')">📝 Разбор задач</button>
+<button class="btn-clean" onclick="openAddCardModal()" style="margin-top:20px;">➕ Добавить карточку</button>
+<button class="btn-clean" onclick="switchTab('lit')" style="margin-bottom:20px;">📖 Литература</button>
+
+<!-- Подпись разработчиков -->
+<div style="text-align:center; color:#888; font-size:13px; margin-top:40px; line-height:1.5;">
+    Разработчики:<br>
+    Зотова Н.Д., Доронин Д.Д.
+</div>
+</div>
+
+<div id="screenModes" class="screen">
+<button class="back" onclick="switchTab('home')">← Назад</button>
+<h1>🧠 Типы тренировок</h1>
+<div style="margin-top:20px;">
+    <div class="mode-card" onclick="startModeTrain('formula-to-task')"><h3>Формула → задача</h3><p>Даётся формула, нужно выбрать, к какой ситуации она подходит.</p></div>
+    <div class="mode-card" onclick="startModeTrain('task-to-formula')"><h3>Задача → формула</h3><p>Дано условие, нужно выбрать нужную формулу.</p></div>
+    <div class="mode-card" onclick="startModeTrain('derive')"><h3>Выведи/преобразуй</h3><p>Дано выражение, нужно выразить одну величину через другие.</p></div>
+    <div class="mode-card" onclick="startModeTrain('dimensions')"><h3>Единицы и размерности</h3><p>Проверка размерностей в формулах.</p></div>
+</div>
+</div>
+
+<div id="screenStats" class="screen">
+<h1>📊 Статистика</h1>
+<div class="stat-row">
+    <div class="stat-card"><div class="stat-val" id="statTotalDays">0</div><div class="stat-name">Всего дней</div></div>
+    <div class="stat-card"><div class="stat-val" id="statStreak">0</div><div class="stat-name">Рекорд подряд</div></div>
+</div>
+<div class="stat-box">
+    <div style="font-weight:bold;margin-bottom:5px;">Активность за 7 дней</div>
+    <div class="chart-container" id="chart"></div>
+    <div class="legend">
+        <span><div class="dot" style="background:#10b981;"></div> Выучено</span>
+        <span><div class="dot" style="background:#4a6cf7;"></div> Повторено</span>
+    </div>
+</div>
+<button class="btn" onclick="resetProgress()" style="background:#ef4444;">Сбросить прогресс изучения</button>
+</div>
+
+<div id="screenCats" class="screen">
+<button class="back" onclick="switchTab('home')">← Назад</button><h1>Категории</h1>
+<p style="font-size:13px;color:#888;margin-bottom:15px;">Отметьте галочками категории, которые хотите учить</p>
+<div id="topicsList"></div>
+</div>
+
+<div id="screenTerms" class="screen">
+<button class="back" onclick="switchTab('cats')">← Назад</button>
+<h1>📖 Термины</h1>
+<div id="termsList" class="grid-container" style="margin-top:20px;"></div>
+</div>
+
+<div id="screenTasks" class="screen">
+<button class="back" onclick="switchTab('home')">← Назад</button>
+<h1>📝 Разбор задач</h1>
+<div id="tasksList" class="grid-container" style="margin-top:20px;"></div>
+</div>
+
+<div id="screenLit" class="screen">
+<button class="back" onclick="switchTab('home')">← Назад</button>
+<h1>📖 Литература</h1>
+<div id="litList" style="margin-top:20px;"></div>
+</div>
+
+<div id="screenTopic" class="screen"><button class="back" onclick="switchTab('cats')">← Назад</button><h1 id="topicTitle"></h1><div id="formulasList" style="margin-top:20px;"></div><button class="btn" onclick="startTrainTopic()">🎯 Тренировка по теме</button></div>
+<div id="screenTrain" class="screen">
+<button class="back" onclick="switchTab('home')">← Выход</button>
+<div style="text-align:center;margin-bottom:10px;" id="counter"></div>
+<div id="trainArea"></div>
+</div>
+<div id="myModal" class="modal" onclick="if(event.target===this)closeModal()"><div class="modal-content" id="modalBody"></div></div>
+
+<script>
+// ============ БАЗА ЗАДАЧ ============
+const TASKS = [
+    { 
+        group: "1. Основы термодинамики", 
+        title: "Задача 1.1. Энтропия и теплоемкость", 
+        condition: "1. Выяснить, как меняется энтропия однородной системы при ее медленном расширении при постоянном давлении. Зависит ли характер изменения энтропии от коэффициента теплового расширения α?<br><br>2. Выяснить, у каких систем теплоемкость при постоянном объеме C_V не зависит от объема системы.", 
+        given: "1. Процесс изобарный (p = const). Коэффициент теплового расширения $\\alpha = \\frac{1}{V}\\left(\\frac{\\partial V}{\\partial T}\\right)_p$.<br><br>2. Теплоемкость $C_V = \\left(\\frac{\\partial E}{\\partial T}\\right)_V$.", 
+        find: "1. Знак производной $\\left(\\frac{\\partial S}{\\partial V}\\right)_p$.<br><br>2. Условие, при котором $\\frac{\\partial C_V}{\\partial V} = 0$.", 
+        solution: `
+            <b>1. Изменение энтропии:</b><br>
+            Применим метод якобианов. Нас интересует знак производной:<br>
+            $$\\left( \\frac{\\partial S}{\\partial V} \\right)_p = \\frac{\\partial(S, p)}{\\partial(V, p)} = \\frac{\\partial(S, p)}{\\partial(T, p)} \\frac{\\partial(T, p)}{\\partial(V, p)} = \\frac{C_p}{T} \\cdot \\frac{1}{\\alpha V} = \\frac{C_p}{\\alpha} \\frac{1}{TV}$$
+            Теплоемкость $C_p$ неотрицательна, поэтому знак левой части определяется знаком $\\alpha$. Энтропия возрастает, если $\\alpha > 0$, и убывает, если $\\alpha < 0$.<br><br>
+            
+            <b>2. Теплоемкость при постоянном объеме:</b><br>
+            Нас интересует случай, когда обращается в ноль производная:<br>
+            $$\\frac{\\partial C_V}{\\partial V} = \\frac{\\partial}{\\partial V} \\left( \\frac{\\partial E}{\\partial T} \\right)_V = 0$$
+            Т.к. в E входит дифференциал dV, удобно поменять порядок взятия производных:<br>
+            $$\\frac{\\partial C_V}{\\partial V} = \\frac{\\partial}{\\partial T} \\left( \\frac{\\partial E}{\\partial V} \\right)_T = \\frac{\\partial}{\\partial T} \\left( T \\left( \\frac{\\partial S}{\\partial V} \\right)_T - p \\right)$$
+            Воспользуемся соотношением Максвелла и заменим $\\left(\\frac{\\partial S}{\\partial V}\\right)_T = \\left(\\frac{\\partial p}{\\partial T}\\right)_V$. Получаем:<br>
+            $$\\frac{\\partial C_V}{\\partial V} = \\left( \\frac{\\partial p}{\\partial T} \\right)_V + T \\left( \\frac{\\partial^2 p}{\\partial T^2} \\right)_V - \\left( \\frac{\\partial p}{\\partial T} \\right)_V = T \\left( \\frac{\\partial^2 p}{\\partial T^2} \\right)_V = 0$$
+            <b>Вывод:</b> Теплоемкость $C_V$ не зависит от объема, если давление — линейная функция температуры.
+        `
+    },
+    { 
+        group: "1. Основы термодинамики", 
+        title: "Задача 1.2. Доказательство тождества", 
+        condition: "Доказать тождество:<br>$$\\left( \\frac{\\partial p}{\\partial V} \\right)_S = \\left( \\frac{\\partial p}{\\partial V} \\right)_T - \\frac{T}{C_V} \\left( \\frac{\\partial p}{\\partial T} \\right)_V^2$$", 
+        given: "Соотношения Максвелла и свойства якобианов.", 
+        find: "Доказать равенство.", 
+        solution: `
+            Распишем это соотношение через якобианы:<br>
+            $$\\frac{\\partial(p, S)}{\\partial(V, S)} = \\frac{\\partial(p, T)}{\\partial(V, T)} - \\frac{\\partial(T, V)}{\\partial(S, V)} \\left( \\frac{\\partial(p, V)}{\\partial(T, V)} \\right)^2 \\quad (1.44)$$<br>
+            $$\\frac{\\partial(p, S)}{\\partial(V, S)} = \\frac{\\partial(p, T)}{\\partial(V, T)} - \\frac{\\partial(p, V)}{\\partial(S, V)} \\frac{\\partial(p, V)}{\\partial(T, V)} \\quad (1.45)$$<br><br>
+            Домножим на $\\partial(V, S)$ и $\\partial(V, T)$:<br>
+            $$\\partial(p, S)\\partial(V, T) = \\partial(p, T)\\partial(V, S) - \\partial(p, V)\\partial(p, V) \\quad (1.46)$$<br><br>
+            Заменим один раз $\\partial(p, V) = \\partial(T, S)$ (соотношение Максвелла), разделим на $(\\partial(V, T))^2$ и поменяем порядок переменных в обеих скобках числителя последнего слагаемого:<br>
+            $$\\frac{\\partial(p, S)}{\\partial(V, T)} = \\frac{\\partial(p, T)\\partial(V, S)}{\\partial(V, T)\\partial(V, T)} - \\frac{\\partial(S, T)\\partial(V, p)}{\\partial(V, T)\\partial(V, T)} \\quad (1.47)$$<br><br>
+            <b>Вывод:</b> Сравним полученное выражение с определением якобиана (1.26) и увидим, что они совпадают, т.е. исходное равенство верно.
+        `
+    }
+];
+
+// ============ ТЕРМИНЫ (СГРУППИРОВАНЫ) ============
+const TERMS = [
+    // Группа 1
+    { group: "1. Базовые понятия и системы", id: "t1", title: "Статистическая физика", definition: "Раздел физики, изучающий свойства макроскопических систем (состоящих из большого числа частиц N >> 10^6) на основе статистического метода. Она является мостом между микроскопическим миром (атомы, электроны, фотоны) и макроскопической термодинамикой. Изучает, как из поведения отдельных частиц возникают макроскопические свойства (температура, давление, энтропия, теплоемкость). (См. учебник, Введение и раздел 1.1)." },
+    { group: "1. Базовые понятия и системы", id: "t2", title: "Термодинамика", definition: "Феноменологическая теория тепловых явлений, базирующаяся на нескольких аксиомах (началах). Она описывает свойства макроскопических тел на основе обобщения экспериментальных данных, не рассматривая внутреннее строение веществ. Основные законы: закон сохранения энергии и принцип передачи тепла от горячего тела к холодному. (См. учебник, раздел 1.1)." },
+    { group: "1. Базовые понятия и системы", id: "t3", title: "Термодинамическая система", definition: "Тело или система тел, состоящая из большого числа частей (N >> 10^6), обычно отделенная от окружающей среды некоторой границей раздела. (См. учебник, раздел 1.2.1)." },
+    { group: "1. Базовые понятия и системы", id: "t4", title: "Гомогенная система", definition: "Однородная система, химический состав и физические свойства которой во всех её частях одинаковы или меняются непрерывно (между частями нет поверхностей раздела). (См. учебник, раздел 1.2.1)." },
+    { group: "1. Базовые понятия и системы", id: "t5", title: "Гетерогенная система", definition: "Система, состоящая из нескольких гомогенных частей (фаз), разделённых поверхностью раздела. Однородные части (фазы) могут отличаться друг от друга по составу и свойствам, поэтому свойства гетерогенной системы изменяются скачкообразно при переходе из одной фазы в другую. (См. учебник, раздел 1.2.1)." },
+    { group: "1. Базовые понятия и системы", id: "t6", title: "Термодинамическое состояние", definition: "Состояние термодинамической системы, однозначно определяемое набором макроскопических параметров (V — объём, p — давление, N — число частиц, E — энергия, T — температура и т.д.), которые характеризуют систему в целом и определяют все её свойства. (См. учебник, раздел 1.2.2)." },
+
+    // Группа 2
+    { group: "2. Параметры и классификация систем", id: "t7", title: "Внешние параметры", definition: "Параметры, характеризующие внешние условия, в которых находится система. Они определяются ситуацией, например, для системы в замкнутом объёме в тепловом равновесии с окружающей средой внешними параметрами будут (N, V, T). (См. учебник, раздел 1.2.2)." },
+    { group: "2. Параметры и классификация систем", id: "t8", title: "Внутренние параметры", definition: "Параметры, непосредственно определяющие характер расположения и движения внутренних частей системы. Они приходят к равновесию при заданных внешних параметрах (например, давление p, температура T, химический потенциал μ). (См. учебник, раздел 1.2.2)." },
+    { group: "2. Параметры и классификация систем", id: "t9", title: "Изолированная система", definition: "Система, которая не обменивается с окружающей средой ни энергией, ни веществом (E = const, N = const). Всякая изолированная макроскопическая система с течением времени приходит в состояние термодинамического равновесия и самопроизвольно выйти из него не может. (См. учебник, раздел 1.2.2)." },
+    { group: "2. Параметры и классификация систем", id: "t10", title: "Замкнутая система", definition: "Система, которая обменивается с окружающей средой энергией, но не веществом (например, N = const, но возможен теплообмен, T = const). (См. учебник, раздел 4.7)." },
+    { group: "2. Параметры и классификация систем", id: "t11", title: "Открытая система", definition: "Система, которая может обмениваться с окружающей средой как энергией, так и веществом. (См. учебник, раздел 1.2.2)." },
+    { group: "2. Параметры и классификация систем", id: "t12", title: "Интенсивные параметры", definition: "Параметры, которые в равновесии одинаковы для всех частей системы. К ним относятся давление p, температура T, химический потенциал μ и т.д. Они не зависят от размера системы. (См. учебник, раздел 1.2.2)." },
+    { group: "2. Параметры и классификация систем", id: "t13", title: "Экстенсивные параметры", definition: "Параметры (аддитивные), которые суммируются при объединении частей системы. К ним относятся объём V, число частиц N, энергия E и т.д. (См. учебник, раздел 1.2.2)." },
+
+    // Группа 3
+    { group: "3. Термодинамические процессы", id: "t14", title: "Термодинамический процесс", definition: "Изменение термодинамических параметров системы с течением времени. Причиной возникновения процессов является изменение внешних параметров и переход системы в состояние нового термодинамического равновесия. (См. учебник, раздел 1.2.3)." },
+    { group: "3. Термодинамические процессы", id: "t15", title: "Квазистатический процесс (обратимый)", definition: "Процесс, при котором система на любом этапе успевает прийти в новое положение равновесия, т.е. в любой момент времени состояние системы можно считать равновесным. Все термодинамические параметры определены для любого промежуточного состояния. Эти процессы обратимы. (См. учебник, раздел 1.2.3)." },
+    { group: "3. Термодинамические процессы", id: "t16", title: "Неквазистатический процесс (необратимый)", definition: "Процесс, при котором переход к состоянию равновесия нельзя описать как последовательное изменение состояний. Отсутствие информации о промежуточных состояниях создает трудности теоретического описания, а неравновесность приводит к недополучению полезной механической работы. (См. учебник, раздел 1.2.3)." },
+    { group: "3. Термодинамические процессы", id: "t17", title: "Равновесный процесс", definition: "Процесс, который протекает бесконечно медленно, так что система всё время находится в состоянии термодинамического равновесия. (Синоним: квазистатический процесс). (См. учебник, раздел 1.2.3)." },
+    { group: "3. Термодинамические процессы", id: "t18", title: "Неравновесный процесс", definition: "Процесс, при котором система не успевает приходить в состояние равновесия. Он является необратимым. (Синоним: неквазистатический процесс). (См. учебник, раздел 1.2.3)." },
+
+    // Группа 4
+    { group: "4. Аксиомы термодинамики", id: "t19", title: "Аксиома 1 (Существование температуры)", definition: "Всякая макроскопическая система, находящаяся в состоянии термодинамического равновесия, характеризуется специальным интенсивным параметром, называемым температурой, которая является единой для всех частей системы. Свойства: T(E→0) = 0; в равновесии T1 = T2 = ... = T; dT/dE ≥ 0. Следствие: В равновесии все части системы имеют одинаковую температуру, что позволяет использовать её как параметр состояния. (См. учебник, раздел 1.3.1)." },
+    { group: "4. Аксиомы термодинамики", id: "t20", title: "Аксиома 2 (Первое начало термодинамики)", definition: "Внутренняя энергия системы E может измениться только за счёт обмена энергией с окружающей средой: механическим (работа внешних сил δA* = -pdV) или теплопередачей (количество теплоты δQ). Выражается уравнением: dE = δQ + δA*. Следствия: 1) Внутренняя энергия замкнутой системы постоянна (E = const). 2) Невозможен вечный двигатель первого рода (в замкнутом процессе тело не может совершить работу больше, чем полученное количество теплоты). (См. учебник, раздел 1.3.2)." },
+    { group: "4. Аксиомы термодинамики", id: "t21", title: "Аксиома 3 (Второе начало термодинамики)", definition: "Всякая равновесная макроскопическая система характеризуется специальным экстенсивным параметром — энтропией S, которая при обратимом процессе связана с переданным количеством тепла соотношением dS = δQ/T. Свойства: S(E→0) = 0; dS/dE = 1/T > 0; энтропия изолированной неравновесной системы монотонно растёт, достигая максимума в равновесии. Следствия: 1) Неравенство Клаузиуса: dS ≥ δQ/T (равенство только для обратимых процессов). 2) Невозможен вечный двигатель второго рода (теплоту нельзя полностью превратить в работу в циклическом процессе). 3) Тепло не может самопроизвольно переходить от менее нагретого тела к более нагретому. 4) При тепловом контакте энергия передается от горячего тела к холодному. (См. учебник, раздел 1.3.3-1.3.4)." }
+];
+
+// ============ ЛИТЕРАТУРА ============
+const LITERATURE = [
+    { id: "lit1", title: "Воронцов А.Г., Мирзоев А.А. Статистическая физика", desc: "Учебное пособие. Челябинск: Издательский центр ЮУрГУ, 2019. – 160 с.", link: "https://physics.susu.ru/sites/default/files/method/(%d0%b1)%20%d0%a1%d1%82%d0%b0%d1%82%d0%b8%d1%81%d1%82%d0%b8%d1%87%d0%b5%d1%81%d0%ba%d0%b0%d1%8f%20%d1%84%d0%b8%d0%b7%d0%b8%d0%ba%d0%b0.%20%d0%a3%d1%87%d0%b5%d0%b1%d0%bd%d0%be%d0%b5%20%d0%bf%d0%be%d1%81%d0%be%d0%b1%d0%b8%d0%b5%20-%20%d0%90.%d0%93.%20%d0%92%d0%be%d1%80%d0%be%d0%bd%d1%86%d0%be%d0%b2,%20%d0%90.%d0%90.%20%d0%9c%d0%b8%d1%80%d0%b7%d0%be%d0%b5%d0%b2%20-%202019.pdf", content: `<h3>Аннотация</h3><p>Пособие предназначено для первоначального знакомства с методами статистической физики.</p><h3>Оглавление</h3><ul><li><b>1. Основы термодинамики</b></li><li><b>2. Основы статистической физики</b></li><li><b>3. Статистика уровней энергии изолированной системы</b></li><li><b>4. Статистика уровней энергии равновесных систем</b></li><li><b>5. Статистика частиц, идеальные газы</b></li><li><b>6. Примеры идеальных газов</b></li></ul>` },
+    { id: "lit2", title: "Ландау Л.Д., Лифшиц Е.М. Статистическая физика. Часть 1", desc: "Теоретическая физика, Том V. Издание 3-е. М.: Наука, 1976. – 584 с.", link: "https://github.com/sunnyyangyangyang/Course_of_Theoretical_Physics_Landau_Lifshitz/raw/main/Vol%205%20-%20Landau%2C%20Lifshitz%20-%20Statistical%20Physics%20Part%201%20(3rd%2C%201980).pdf", content: `<h3>Аннотация</h3><p>Классический университетский учебник. В основу положен метод Гиббса.</p><h3>Оглавление</h3><ul><li><b>Глава I. Основные принципы статистики</b></li><li><b>Глава II. Термодинамические величины</b></li><li><b>Глава III. Распределение Гиббса</b></li><li><b>Глава IV. Идеальный газ</b></li><li><b>Глава V. Распределение Ферми и Бозе</b></li><li><b>Глава VI. Твердые тела</b></li></ul>` },
+    { id: "lit3", title: "Рейф Ф. Статистическая физика (Берклеевский курс физики, том V)", desc: "М.: Наука, 1972. – 352 с.", link: "https://vdoc.pub/download/berkleevskii-kurs-fiziki-statisticheskaia-fizika-68ja3o3keeg0", content: `<h3>Аннотация</h3><p>Книга представляет собой пятый том курса общей физики, созданного преподавателями Калифорнийского университета в Беркли.</p><h3>Оглавление</h3><ul><li><b>Глава 1. Характерные особенности макроскопических систем</b></li><li><b>Глава 2. Основные понятия теории вероятностей</b></li><li><b>Глава 3. Статистическое описание систем, состоящих из частиц</b></li><li><b>Глава 4. Тепловое взаимодействие</b></li><li><b>Глава 5. Макроскопическая теория и измерения</b></li><li><b>Глава 6. Каноническое распределение</b></li><li><b>Глава 7. Общее термодинамическое взаимодействие</b></li><li><b>Глава 8. Элементарная кинетическая теория</b></li></ul>` }
+];
+
+// ============ БАЗОВЫЕ ФОРМУЛЫ ============
+const BASE_FORMULAS=[
+{id:"1",t:"1. Основы термодинамики",n:"Работа внешних сил",l:"\\delta A^* = -p dV",d:"<b>Зачем нужна:</b> Показывает, какую работу совершают внешние силы над системой при изменении ее объема.<br><b>Тонкость:</b> Знак минус означает, что при сжатии (dV < 0) внешние силы совершают положительную работу.",v:"<b>A*</b> — работа;<br><b>p</b> — давление;<br><b>dV</b> — изменение объема."},
+{id:"2",t:"1. Основы термодинамики",n:"Первое начало термодинамики",l:"dE = \\delta Q + \\delta A^*",d:"<b>Зачем нужна:</b> Закон сохранения энергии для термодинамических систем.<br><b>Тонкость:</b> dE — полный дифференциал, а δQ и δA* — малые величины, зависят от пути.",v:"<b>dE</b> — изменение энергии;<br><b>δQ</b> — теплота;<br><b>δA*</b> — работа."},
+{id:"3",t:"1. Основы термодинамики",n:"Изменение энтропии",l:"dS = \\frac{\\delta Q}{T}",d:"<b>Зачем нужна:</b> Изменение энтропии при обратимом процессе.<br><b>Тонкость:</b> Для необратимых — изменение больше (неравенство Клаузиуса).",v:"<b>dS</b> — изменение энтропии;<br><b>δQ</b> — теплота;<br><b>T</b> — температура."},
+{id:"4",t:"1. Основы термодинамики",n:"Неравенство Клаузиуса",l:"dS \\geq \\frac{\\delta Q}{T}",d:"<b>Зачем нужна:</b> Второе начало термодинамики.<br><b>Тонкость:</b> Равенство — только для обратимых процессов.",v:"<b>dS</b> — изменение энтропии;<br><b>δQ</b> — теплота;<br><b>T</b> — температура."},
+{id:"5",t:"1. Основы термодинамики",n:"Основное тождество",l:"dE = TdS - pdV",d:"<b>Зачем нужна:</b> Объединяет первое и второе начала.<br><b>Тонкость:</b> pdV — работа самой системы.",v:"<b>dE</b> — изменение энергии;<br><b>T</b> — температура;<br><b>dS</b> — изменение энтропии;<br><b>p</b> — давление;<br><b>dV</b> — изменение объема."},
+{id:"6",t:"1. Основы термодинамики",n:"Химический потенциал",l:"\\mu = \\frac{E - TS + pV}{N}",d:"<b>Зачем нужна:</b> Изменение энергии при добавлении частицы.<br><b>Тонкость:</b> Это энергия Гиббса на одну частицу.",v:"<b>μ</b> — хим. потенциал;<br><b>E</b> — энергия;<br><b>T</b> — температура;<br><b>S</b> — энтропия;<br><b>p</b> — давление;<br><b>V</b> — объем;<br><b>N</b> — число частиц."},
+{id:"7",t:"1. Основы термодинамики",n:"Энтальпия",l:"H = E + pV",d:"<b>Зачем нужна:</b> Тепловая функция. При изобарном процессе Q = ΔH.",v:"<b>H</b> — энтальпия;<br><b>E</b> — энергия;<br><b>p</b> — давление;<br><b>V</b> — объем."},
+{id:"8",t:"1. Основы термодинамики",n:"Свободная энергия Гельмгольца",l:"F = E - TS",d:"<b>Зачем нужна:</b> Максимальная работа в изотермическом процессе.<br><b>Тонкость:</b> Минимум F — равновесие при заданных V, T.",v:"<b>F</b> — свободная энергия;<br><b>E</b> — энергия;<br><b>T</b> — температура;<br><b>S</b> — энтропия."},
+{id:"9",t:"1. Основы термодинамики",n:"Энергия Гиббса",l:"G = E - TS + pV",d:"<b>Зачем нужна:</b> Потенциал при постоянных p, T.<br><b>Тонкость:</b> Минимум G — самопроизвольная реакция. G = μN.",v:"<b>G</b> — энергия Гиббса;<br><b>E</b> — энергия;<br><b>T</b> — температура;<br><b>S</b> — энтропия;<br><b>p</b> — давление;<br><b>V</b> — объем."},
+{id:"10",t:"1. Основы термодинамики",n:"Большой потенциал",l:"\\Omega = E - TS - \\mu N",d:"<b>Зачем нужна:</b> Для открытых систем.<br><b>Тонкость:</b> Ω = -kT ln Z̃.",v:"<b>Ω</b> — большой потенциал;<br><b>E</b> — энергия;<br><b>T</b> — температура;<br><b>S</b> — энтропия;<br><b>μ</b> — хим. потенциал;<br><b>N</b> — число частиц."},
+
+{id:"11",t:"2. Основы статфизики",n:"Среднее по времени",l:"\\langle A \\rangle = \\frac{1}{\\tau} \\int_0^\\tau A(t) dt",d:"<b>Зачем нужна:</b> Экспериментально измеряемая величина.<br><b>Тонкость:</b> По эргодической гипотезе равна среднему по ансамблю.",v:"<b>A</b> — величина;<br><b>τ</b> — время;<br><b>t</b> — время."},
+{id:"12",t:"2. Основы статфизики",n:"Дисперсия",l:"\\sigma^2 = \\langle X^2 \\rangle - \\langle X \\rangle^2",d:"<b>Зачем нужна:</b> Разброс значений.<br><b>Тонкость:</b> Относительная флуктуация ~ 1/√N.",v:"<b>σ²</b> — дисперсия;<br><b>X</b> — случайная величина."},
+{id:"13",t:"2. Основы статфизики",n:"Нормировка вероятностей",l:"\\sum_i P_i = 1",d:"<b>Зачем нужна:</b> Фундаментальное свойство вероятностей.",v:"<b>P_i</b> — вероятность."},
+{id:"14",t:"2. Основы статфизики",n:"Среднее значение",l:"\\langle A \\rangle = \\sum_i A_i P_i",d:"<b>Зачем нужна:</b> Среднее по ансамблю.",v:"<b>⟨A⟩</b> — среднее;<br><b>A_i</b> — значение;<br><b>P_i</b> — вероятность."},
+{id:"15",t:"2. Основы статфизики",n:"Функция распределения",l:"dP(q, p) = \\rho(q, p) d\\Gamma",d:"<b>Зачем нужна:</b> Вероятность попадания в элемент объема.",v:"<b>dP</b> — вероятность;<br><b>ρ</b> — плотность;<br><b>dΓ</b> — элемент объема."},
+{id:"16",t:"2. Основы статфизики",n:"Теорема Лиувилля",l:"\\frac{\\partial \\rho}{\\partial t} = -\\{\\rho, H\\}",d:"<b>Зачем нужна:</b> Плотность постоянна вдоль траектории.",v:"<b>ρ</b> — плотность;<br><b>H</b> — гамильтониан."},
+
+{id:"17",t:"3. Микроканонический ансамбль",n:"Вероятность микросостояния",l:"P_i = \\frac{1}{W}",d:"<b>Зачем нужна:</b> Все микросостояния равновероятны.",v:"<b>P_i</b> — вероятность;<br><b>W</b> — статвес."},
+{id:"18",t:"3. Микроканонический ансамбль",n:"Плотность состояний",l:"D(E) = \\frac{d\\Omega}{dE}",d:"<b>Зачем нужна:</b> Число состояний на интервал энергии.",v:"<b>D(E)</b> — плотность;<br><b>Ω</b> — число состояний."},
+{id:"19",t:"3. Микроканонический ансамбль",n:"Формула Больцмана",l:"S = k \\ln W",d:"<b>Зачем нужна:</b> Связь энтропии и числа состояний.",v:"<b>S</b> — энтропия;<br><b>k</b> — постоянная Больцмана;<br><b>W</b> — статвес."},
+{id:"20",t:"3. Микроканонический ансамбль",n:"Определение температуры",l:"\\frac{1}{T} = \\left( \\frac{\\partial S}{\\partial E} \\right)_{V,N}",d:"<b>Зачем нужна:</b> Температура через энтропию.",v:"<b>T</b> — температура;<br><b>S</b> — энтропия;<br><b>E</b> — энергия."},
+{id:"21",t:"3. Микроканонический ансамбль",n:"Определение давления",l:"p = T \\left( \\frac{\\partial S}{\\partial V} \\right)_{E,N}",d:"<b>Зачем нужна:</b> Давление через энтропию.",v:"<b>p</b> — давление;<br><b>T</b> — температура;<br><b>S</b> — энтропия;<br><b>V</b> — объем."},
+{id:"22",t:"3. Микроканонический ансамбль",n:"Химический потенциал",l:"\\mu = -T \\left( \\frac{\\partial S}{\\partial N} \\right)_{E,V}",d:"<b>Зачем нужна:</b> Хим. потенциал через энтропию.",v:"<b>μ</b> — хим. потенциал;<br><b>T</b> — температура;<br><b>S</b> — энтропия;<br><b>N</b> — число частиц."},
+
+{id:"23",t:"4. Канонические ансамбли",n:"Распределение Гиббса",l:"P_i = \\frac{1}{\\tilde{Z}} e^{(\\mu N_i - E_i)/kT}",d:"<b>Зачем нужна:</b> Для открытых систем.",v:"<b>P_i</b> — вероятность;<br><b>Z̃</b> — статсумма;<br><b>μ</b> — хим. потенциал;<br><b>N_i</b> — частицы;<br><b>E_i</b> — энергия;<br><b>T</b> — температура."},
+{id:"24",t:"4. Канонические ансамбли",n:"Большая статсумма",l:"\\tilde{Z} = \\sum_i e^{(\\mu N_i - E_i)/kT}",d:"<b>Зачем нужна:</b> Сумма по состояниям.",v:"<b>Z̃</b> — статсумма;<br><b>N_i</b> — частицы;<br><b>E_i</b> — энергия;<br><b>μ</b> — хим. потенциал."},
+{id:"25",t:"4. Канонические ансамбли",n:"Распределение Больцмана",l:"P_i = \\frac{1}{Z} e^{-E_i/kT}",d:"<b>Зачем нужна:</b> Вероятность состояния.",v:"<b>P_i</b> — вероятность;<br><b>Z</b> — статсумма;<br><b>E_i</b> — энергия;<br><b>T</b> — температура."},
+{id:"26",t:"4. Канонические ансамбли",n:"Каноническая статсумма",l:"Z = \\sum_i e^{-E_i/kT}",d:"<b>Зачем нужна:</b> Нормировочная сумма.",v:"<b>Z</b> — статсумма;<br><b>E_i</b> — энергия;<br><b>T</b> — температура."},
+{id:"27",t:"4. Канонические ансамбли",n:"Свободная энергия",l:"F = -kT \\ln Z",d:"<b>Зачем нужна:</b> Связь F и Z.",v:"<b>F</b> — свободная энергия;<br><b>Z</b> — статсумма."},
+{id:"28",t:"4. Канонические ансамбли",n:"Большой потенциал",l:"\\Omega = -kT \\ln \\tilde{Z}",d:"<b>Зачем нужна:</b> Связь Ω и Z̃.",v:"<b>Ω</b> — потенциал;<br><b>Z̃</b> — статсумма."},
+
+{id:"29",t:"5. Квантовая статистика",n:"Распределение Ферми-Дирака",l:"f(\\varepsilon) = \\frac{1}{e^{(\\varepsilon - \\mu)/kT} + 1}",d:"<b>Зачем нужна:</b> Для фермионов.<br><b>Тонкость:</b> Принцип Паули.",v:"<b>f(ε)</b> — вероятность;<br><b>ε</b> — энергия;<br><b>μ</b> — хим. потенциал."},
+{id:"30",t:"5. Квантовая статистика",n:"Распределение Бозе-Эйнштейна",l:"f(\\varepsilon) = \\frac{1}{e^{(\\varepsilon - \\mu)/kT} - 1}",d:"<b>Зачем нужна:</b> Для бозонов.<br><b>Тонкость:</b> Возможна бозе-конденсация.",v:"<b>f(ε)</b> — среднее число;<br><b>ε</b> — энергия;<br><b>μ</b> — хим. потенциал."},
+{id:"31",t:"5. Квантовая статистика",n:"Распределение Больцмана",l:"f(\\varepsilon) = e^{(\\mu - \\varepsilon)/kT}",d:"<b>Зачем нужна:</b> Классический предел.",v:"<b>f(ε)</b> — вероятность;<br><b>ε</b> — энергия;<br><b>μ</b> — хим. потенциал."},
+{id:"32",t:"5. Квантовая статистика",n:"Число частиц на уровне",l:"\\langle n_\\nu \\rangle = \\frac{1}{e^{(\\varepsilon_\\nu - \\mu)/kT} - \\zeta}",d:"<b>Зачем нужна:</b> Общая формула.<br><b>Тонкость:</b> ζ = +1 (бозоны), -1 (фермионы), 0 (классика).",v:"<b>n_ν</b> — число частиц;<br><b>ε_ν</b> — энергия;<br><b>μ</b> — хим. потенциал;<br><b>ζ</b> — параметр."},
+{id:"33",t:"5. Квантовая статистика",n:"Плотность состояний",l:"D(\\varepsilon) = V \\frac{2}{\\sqrt{\\pi}} \\left( \\frac{\\sqrt{2\\pi m}}{h} \\right)^3 \\sqrt{\\varepsilon}",d:"<b>Зачем нужна:</b> Число состояний на интервал энергии.",v:"<b>D(ε)</b> — плотность;<br><b>V</b> — объем;<br><b>m</b> — масса;<br><b>ε</b> — энергия."},
+
+{id:"34",t:"6. Идеальные газы",n:"Статистический интеграл",l:"Z^{(1)} = \\frac{V}{\\lambda_T^3}",d:"<b>Зачем нужна:</b> Статсумма одной частицы.",v:"<b>Z^(1)</b> — статсумма;<br><b>V</b> — объем;<br><b>λ_T</b> — длина волны."},
+{id:"35",t:"6. Идеальные газы",n:"Распределение Максвелла",l:"dP(p) = \\frac{4\\pi p^2}{(2\\pi mkT)^{3/2}} e^{-p^2/2mkT} dp",d:"<b>Зачем нужна:</b> Распределение по импульсу.",v:"<b>dP(p)</b> — вероятность;<br><b>p</b> — импульс;<br><b>m</b> — масса;<br><b>T</b> — температура."},
+{id:"36",t:"6. Идеальные газы",n:"Энергия Ферми",l:"E_F = \\frac{\\hbar^2}{2m} (3\\pi^2 n)^{2/3}",d:"<b>Зачем нужна:</b> Максимальная энергия при T=0.",v:"<b>E_F</b> — энергия Ферми;<br><b>m</b> — масса;<br><b>n</b> — концентрация."},
+{id:"37",t:"6. Идеальные газы",n:"Температура Бозе-конденсации",l:"T_0 = \\frac{0,0839}{k} \\frac{h^2}{m} \\left(\\frac{N}{V}\\right)^{2/3}",d:"<b>Зачем нужна:</b> Температура конденсации.",v:"<b>T_0</b> — температура;<br><b>N/V</b> — концентрация."},
+{id:"38",t:"6. Идеальные газы",n:"Формула Планка",l:"\\rho(\\nu, T) = \\frac{8\\pi h \\nu^3}{c^3} \\frac{1}{e^{h\\nu/kT} - 1}",d:"<b>Зачем нужна:</b> Спектр излучения АЧТ.",v:"<b>ρ(ν,T)</b> — плотность;<br><b>h</b> — постоянная Планка;<br><b>ν</b> — частота;<br><b>c</b> — скорость света."},
+{id:"39",t:"6. Идеальные газы",n:"Закон Стефана-Больцмана",l:"E = \\frac{4\\sigma}{c} V T^4",d:"<b>Зачем нужна:</b> Энергия излучения.",v:"<b>E</b> — энергия;<br><b>σ</b> — постоянная;<br><b>V</b> — объем;<br><b>T</b> — температура."},
+{id:"40",t:"6. Идеальные газы",n:"Теплоемкость Дебая",l:"C_V \\approx \\frac{12N\\pi^4}{5} \\left( \\frac{T}{\\theta_D} \\right)^3",d:"<b>Зачем нужна:</b> Теплоемкость при низких T.",v:"<b>C_V</b> — теплоемкость;<br><b>N</b> — число частиц;<br><b>T</b> — температура;<br><b>θ_D</b> — температура Дебая."},
+{id:"41",t:"6. Идеальные газы",n:"Закон Дюлонга-Пти",l:"C_V = 3R",d:"<b>Зачем нужна:</b> Теплоемкость при высоких T.",v:"<b>C_V</b> — теплоемкость;<br><b>R</b> — газовая постоянная."},
+
+// ПРАВИЛА И ОПРЕДЕЛЕНИЯ
+{id:"p1",t:"Правила и определения",n:"Микроскопические параметры системы",l:"<table class='rule-table'><tr><th>Параметр</th><th>Описание</th></tr><tr><td>Координаты (q)</td><td>Положение частицы в пространстве.</td></tr><tr><td>Импульсы (p)</td><td>Импульс частицы.</td></tr><tr><td>Энергия (ε_i)</td><td>Энергия отдельной частицы.</td></tr><tr><td>Спин</td><td>Внутренний момент частицы.</td></tr></table>",d:"<b>Зачем нужно:</b> Микропараметры полностью определяют микросостояние системы. Их число порядка 10^23 для макроскопических тел, поэтому используют статистическое усреднение для перехода к макропараметрам.",v:"<b>q</b> — координата;<br><b>p</b> — импульс;<br><b>ε_i</b> — энергия частицы."},
+{id:"p2",t:"Правила и определения",n:"Классификация термодинамических систем",l:"<table class='rule-table'><tr><th>Тип</th><th>Что фиксировано</th><th>Особенности</th></tr><tr><td>Изолированная</td><td>E, V, N = const</td><td>Не обменивается ни энергией, ни частицами. Микроканонический ансамбль.</td></tr><tr><td>Замкнутая</td><td>T, V, N = const</td><td>Обменивается энергией с термостатом, но не частицами. Канонический ансамбль.</td></tr><tr><td>Открытая</td><td>T, V, μ = const</td><td>Обменивается и энергией, и частицами. Большой канонический ансамбль.</td></tr></table>",d:"<b>Зачем нужно:</b> Тип системы определяет, какой ансамбль и какое распределение использовать.<br><b>Тонкость:</b> Изолированная система — идеализация, но она позволяет вывести все остальные распределения.",v:"<b>E</b> — энергия;<br><b>V</b> — объем;<br><b>N</b> — число частиц;<br><b>T</b> — температура;<br><b>μ</b> — хим. потенциал."},
+{id:"p3",t:"Правила и определения",n:"Виды термодинамических процессов",l:"<table class='rule-table'><tr><th>Процесс</th><th>Описание</th><th>Условие</th></tr><tr><td>Квазистатический</td><td>Бесконечно медленный, система всё время в равновесии.</td><td>dS = δQ/T</td></tr><tr><td>Неквазистатический</td><td>Быстрый, необратимый.</td><td>dS > δQ/T</td></tr><tr><td>Изотермический</td><td>При постоянной температуре.</td><td>T = const</td></tr><tr><td>Изобарный</td><td>При постоянном давлении.</td><td>p = const</td></tr><tr><td>Изохорный</td><td>При постоянном объеме.</td><td>V = const</td></tr><tr><td>Адиабатический</td><td>Без теплообмена.</td><td>δQ = 0</td></tr></table>",d:"<b>Зачем нужно:</b> Для квазистатических процессов работают формулы dS = δQ/T.<br><b>Тонкость:</b> Реальные процессы всегда необратимы.",v:"<b>dS</b> — изменение энтропии;<br><b>δQ</b> — теплота;<br><b>T</b> — температура;<br><b>p</b> — давление;<br><b>V</b> — объем."},
+{id:"p4",t:"Правила и определения",n:"Аксиомы термодинамики",l:"<table class='rule-table'><tr><th>Аксиома</th><th>Формулировка</th></tr><tr><td>1. Температура</td><td>В равновесии все части системы имеют одинаковую T. T(E→0)=0, dT/dE ≥ 0. (Стр. 12)</td></tr><tr><td>2. Первое начало</td><td>dE = δQ + δA*. (Стр. 12-13)</td></tr><tr><td>3. Второе начало</td><td>Вводится энтропия S: dS ≥ δQ/T. (Стр. 13-14)</td></tr></table>",d:"<b>Зачем нужно:</b> Фундамент всей термодинамики.<br><b>Тонкость:</b> Второе начало вводит стрелу времени.",v:"<b>T</b> — температура;<br><b>E</b> — энергия;<br><b>Q</b> — теплота;<br><b>A*</b> — работа;<br><b>S</b> — энтропия."},
+{id:"p5",t:"Правила и определения",n:"Термодинамические тождества",l:"<table class='rule-table'><tr><th>Потенциал</th><th>Тождество</th></tr><tr><td>E</td><td>dE = TdS - pdV + μdN</td></tr><tr><td>H</td><td>dH = TdS + Vdp + μdN</td></tr><tr><td>F</td><td>dF = -SdT - pdV + μdN</td></tr><tr><td>G</td><td>dG = -SdT + Vdp + μdN</td></tr><tr><td>Ω</td><td>dΩ = -SdT - pdV - Ndμ</td></tr></table>",d:"<b>Зачем нужно:</b> Позволяют находить любые термодинамические параметры.<br><b>Тонкость:</b> Каждое тождество соответствует своему набору естественных переменных.",v:"<b>T</b> — температура;<br><b>S</b> — энтропия;<br><b>p</b> — давление;<br><b>V</b> — объем;<br><b>μ</b> — хим. потенциал;<br><b>N</b> — число частиц."},
+{id:"p6",t:"Правила и определения",n:"Термодинамические потенциалы",l:"<table class='rule-table'><tr><th>Потенциал</th><th>Естественные переменные</th><th>Условие минимума</th></tr><tr><td>E</td><td>S, V, N</td><td>Минимум E при S, V, N = const</td></tr><tr><td>H</td><td>S, p, N</td><td>Минимум H при S, p, N = const</td></tr><tr><td>F</td><td>T, V, N</td><td>Минимум F при T, V, N = const</td></tr><tr><td>G</td><td>T, p, N</td><td>Минимум G при T, p, N = const</td></tr><tr><td>Ω</td><td>T, V, μ</td><td>Минимум Ω при T, V, μ = const</td></tr></table>",d:"<b>Зачем нужно:</b> Определяет, какой потенциал минимизируется в данных условиях.<br><b>Тонкость:</b> Знание потенциала позволяет найти все остальные параметры дифференцированием.",v:"<b>E</b> — энергия;<br><b>H</b> — энтальпия;<br><b>F</b> — свободная энергия;<br><b>G</b> — энергия Гиббса;<br><b>Ω</b> — большой потенциал."},
+{id:"p7",t:"Правила и определения",n:"Свойства энтропии",l:"<table class='rule-table'><tr><th>Свойство</th><th>Формулировка</th></tr><tr><td>Мера беспорядка</td><td>Характеризует число микросостояний.</td></tr><tr><td>Аддитивность</td><td>S(системы) = S1 + S2.</td></tr><tr><td>Рост</td><td>Энтропия изолированной системы растет (или постоянна): dS ≥ 0.</td></tr><tr><td>Третье начало</td><td>S(E → 0) = 0.</td></tr></table>",d:"<b>Зачем нужно:</b> Определяет направление процессов и связь с информацией.<br><b>Тонкость:</b> Энтропия — функция состояния.",v:"<b>S</b> — энтропия;<br><b>E</b> — энергия."},
+{id:"p8",t:"Правила и определения",n:"Метод якобианов",l:"<table class='rule-table'><tr><th>Правило</th><th>Формула</th></tr><tr><td>Антисимметрия</td><td>∂(u,v)/∂(x,y) = -∂(u,v)/∂(y,x)</td></tr><tr><td>Цепное правило</td><td>∂(u,v)/∂(x,y) = ∂(u,v)/∂(t,s) * ∂(t,s)/∂(x,y)</td></tr></table>",d:"<b>Зачем нужно:</b> Позволяет переходить от одних термодинамических параметров к другим.<br><b>Тонкость:</b> Это чисто математический трюк.",v:"<b>u, v, x, y, t, s</b> — функции и переменные."},
+{id:"p9",t:"Правила и определения",n:"Соотношения Максвелла",l:"<table class='rule-table'><tr><th>Соотношение</th></tr><tr><td>(∂T/∂V)_S = - (∂p/∂S)_V</td></tr><tr><td>(∂T/∂p)_S = (∂V/∂S)_p</td></tr><tr><td>(∂S/∂V)_T = (∂p/∂T)_V</td></tr><tr><td>(∂S/∂p)_T = - (∂V/∂T)_p</td></tr></table>",d:"<b>Зачем нужно:</b> Позволяют заменять труднодоступные производные на легко измеряемые.<br><b>Тонкость:</b> Получаются из равенства вторых смешанных производных.",v:"<b>T</b> — температура;<br><b>V</b> — объем;<br><b>p</b> — давление;<br><b>S</b> — энтропия."},
+{id:"p10",t:"Правила и определения",n:"Принципы квантовой статистики",l:"<table class='rule-table'><tr><th>Принцип</th><th>Формулировка</th></tr><tr><td>Тождественность</td><td>Частицы одного сорта неразличимы.</td></tr><tr><td>Принцип Паули</td><td>Два фермиона не могут находиться в одном квантовом состоянии.</td></tr></table>",d:"<b>Зачем нужно:</b> Объясняет, почему существуют два разных распределения.<br><b>Тонкость:</b> Бозоны могут скапливаться в одном состоянии, а фермионы — нет.",v:"—"},
+{id:"p11",t:"Правила и определения",n:"Основная гипотеза статфизики",l:"<table class='rule-table'><tr><th>Гипотеза</th><th>Формулировка</th></tr><tr><td>Равновероятность</td><td>Для замкнутой макросистемы все допустимые микросостояния равновероятны.</td></tr></table>",d:"<b>Зачем нужно:</b> Лежит в основе вывода всех статистических распределений.<br><b>Тонкость:</b> Это постулат. Его правильность подтверждается совпадением теории и эксперимента.",v:"—"}
+];
+
+const SPECIAL_TRAINING_DATA = {
+    formulaToTask: [
+        { title: "Распределение Максвелла", formula: "dP(p) = \\frac{4\\pi p^2}{(2\\pi mkT)^{3/2}} e^{-p^2/2mkT} dp", correct: "Газ при заданной температуре T в сосуде, нужно найти долю молекул с импульсом от p до p+dp.", wrong: ["Электроны в металле при T=0, нужно найти вероятность заполнения уровня.", "Фотоны в полости АЧТ, нужно найти спектральную плотность энергии."] },
+        { title: "Формула Больцмана", formula: "S = k \\ln W", correct: "Изолированная система, нужно связать число микросостояний W с её макроскопической энтропией S.", wrong: ["Система в термостате, нужно найти вероятность состояния с энергией E_i.", "Необратимый процесс в изолированной системе, нужно найти изменение энтропии."] },
+        { title: "Распределение Ферми-Дирака", formula: "f(\\varepsilon) = \\frac{1}{e^{(\\varepsilon - \\mu)/kT} + 1}", correct: "Электронный газ в металле, нужно найти вероятность заполнения уровня с энергией ε при температуре T.", wrong: ["Идеальный газ молекул, нужно найти распределение по скоростям.", "Фотонный газ, нужно найти среднее число фотонов."] }
+    ],
+    taskToFormula: [
+        { task: "Электрон находится в состоянии с энергией ε. Какова вероятность того, что он займет это состояние при температуре T?", correct: "f(\\varepsilon) = \\frac{1}{e^{(\\varepsilon - \\mu)/kT} + 1}", wrong: ["P_i = \\frac{1}{Z} e^{-E_i/kT}", "f(\\varepsilon) = \\frac{1}{e^{(\\varepsilon - \\mu)/kT} - 1}"] },
+        { task: "Идеальный газ при температуре T. Как найти число молекул, импульс которых лежит в интервале от p до p+dp?", correct: "dP(p) = \\frac{4\\pi p^2}{(2\\pi mkT)^{3/2}} e^{-p^2/2mkT} dp", wrong: ["f(\\varepsilon) = \\frac{1}{e^{(\\varepsilon - \\mu)/kT} + 1}", "P_i = \\frac{1}{W}"] }
+    ],
+    derive: [
+        { expr: "pV = nRT", ask: "Выразите T", correct: "T = \\frac{pV}{nR}", wrong: ["T = \\frac{pV}{n} R", "T = \\frac{nR}{pV}"] },
+        { expr: "F = -kT \\ln Z", ask: "Выразите Z", correct: "Z = e^{-F/kT}", wrong: ["Z = e^{F/kT}", "Z = -\\frac{F}{kT}"] }
+    ],
+    dimensions: [
+        { dim: "Энергия (Дж)", correct: "p \\cdot V", wrong: ["p / V", "V / p"] },
+        { dim: "Температура (К)", correct: "\\frac{\\partial S}{\\partial E}", wrong: ["\\frac{\\partial E}{\\partial S}", "S \\cdot E"] }
+    ]
+};
+
+let customF = JSON.parse(localStorage.getItem("customF") || "[]");
+let customTraining = JSON.parse(localStorage.getItem("customTraining") || "{}");
+let F = [...BASE_FORMULAS, ...customF];
+
+let p=JSON.parse(localStorage.getItem("p")||"{}"),h=JSON.parse(localStorage.getItem("h")||"{}");
+let seen=JSON.parse(localStorage.getItem("seen")||"[]");
+let selectedCats=JSON.parse(localStorage.getItem("cats")||"[]");
+
+function save(){
+    localStorage.setItem("p",JSON.stringify(p));
+    localStorage.setItem("h",JSON.stringify(h));
+    localStorage.setItem("seen",JSON.stringify(seen));
+    localStorage.setItem("cats",JSON.stringify(selectedCats));
+    localStorage.setItem("customF",JSON.stringify(customF));
+    localStorage.setItem("customTraining",JSON.stringify(customTraining));
+}
+function log(a){
+    let t=new Date().toISOString().split('T')[0];
+    if(!h[t])h[t]={l:0,r:0};
+    if(a==='l')h[t].l++;
+    if(a==='r')h[t].r++;
+    save();renderChart();
+}
+function markSeen(id) {
+    if(!seen.includes(id)) { seen.push(id); save(); }
+}
+function getH(id){return p[id]?p[id]:0}
+function getS(id){return getH(id)===0?"new":(getH(id)>=5?"learned":"learning")}
+
+function updateF() { F = [...BASE_FORMULAS, ...customF]; }
+
+const allCats=[...new Set(F.map(f=>f.t))];
+if(selectedCats.length===0 && !localStorage.getItem("cats_init")){
+    selectedCats=[...allCats];localStorage.setItem("cats_init","true");save();
+}
+
+function toggleCat(cat, e) {
+    if(e) e.stopPropagation();
+    if(selectedCats.includes(cat)){selectedCats=selectedCats.filter(c=>c!==cat)}else{selectedCats.push(cat)}
+    save();renderCats();
+}
+
+function switchTab(t){
+    document.querySelectorAll(".screen").forEach(s=>s.classList.remove("active"));
+    let el = document.getElementById("screen"+t.charAt(0).toUpperCase()+t.slice(1));
+    if(el) el.classList.add("active");
+    document.querySelectorAll(".nav-btn").forEach(b=>b.classList.remove("active"));
+    let n=document.getElementById("navBtn"+t.charAt(0).toUpperCase()+t.slice(1));
+    if(n) n.classList.add("active");
+    if(t==='cats')renderCats();
+    if(t==='stats')renderChart();
+    if(t==='tasks')renderTasks();
+    if(t==='lit')renderLit();
+    if(t==='terms')renderTerms();
+}
+
+function renderTerms(){
+    let container = document.getElementById("termsList");
+    if(!container) return;
+    let html = "";
+    let groups = [...new Set(TERMS.map(t => t.group))];
+    
+    groups.forEach(groupName => {
+        html += `<div class="task-group-title" style="grid-column: 1 / -1;">${groupName}</div>`;
+        TERMS.filter(t => t.group === groupName).forEach(term => {
+            html += `<div class="task-box" onclick="openTermModal('${term.id}')"><h3>${term.title}</h3><p>${term.definition.substring(0, 60)}...</p></div>`;
+        });
+    });
+    
+    container.innerHTML = html;
+}
+
+function openTermModal(id){
+    let t = TERMS.find(x => x.id === id);
+    document.getElementById("modalBody").innerHTML = `
+        <h2 style="margin-bottom:15px; color:#1a1a2e;">${t.title}</h2>
+        <div style="font-size:14px; line-height:1.6; color:#333; background:#f8fafc; padding:15px; border-radius:10px;">
+            ${t.definition}
+        </div>
+        <button class="btn" onclick="closeModal()" style="margin-top:20px;">Закрыть</button>
+    `;
+    document.getElementById("myModal").classList.add("active");
+    if(window.MathJax) MathJax.typesetPromise([document.getElementById("modalBody")]);
+}
+
+function renderTasks(){
+    let container = document.getElementById("tasksList");
+    let html = "";
+    let groups = [...new Set(TASKS.map(t => t.group))];
+    groups.forEach(groupName => {
+        html += `<div class="task-group-title" style="grid-column: 1 / -1;">${groupName}</div>`;
+        TASKS.filter(t => t.group === groupName).forEach(t => {
+            html += `<div class="task-box" onclick="openTaskModal('${t.title}')"><h3>${t.title}</h3><p>${t.condition.substring(0, 60)}...</p></div>`;
+        });
+    });
+    container.innerHTML = html;
+}
+
+function renderLit(){
+    let container = document.getElementById("litList");
+    let html = "";
+    LITERATURE.forEach(l => {
+        html += `<div class="book-card" onclick="openLitModal('${l.id}')"><h3>${l.title}</h3><p>${l.desc}</p></div>`;
+    });
+    container.innerHTML = html;
+}
+
+function openTaskModal(title){
+    let t = TASKS.find(x => x.title === title);
+    document.getElementById("modalBody").innerHTML = `
+        <h2 style="margin-bottom:15px; color:#4a6cf7;">${t.title}</h2>
+        <div style="background:#f8fafc; padding:12px; border-radius:8px; margin-bottom:15px; font-size:14px; line-height:1.4;"><b>Условие:</b><br>${t.condition}</div>
+        <table class="rule-table" style="margin-bottom:15px;"><tr><th>Дано</th><th>Найти</th></tr><tr><td>${t.given}</td><td>${t.find}</td></tr></table>
+        <div style="font-size:14px; line-height:1.6; color:#333;"><b style="color:#10b981;">Подробное решение:</b><br><br>${t.solution}</div>
+        <button class="btn" onclick="closeModal()" style="margin-top:20px;">Закрыть</button>
+    `;
+    document.getElementById("myModal").classList.add("active");
+    if(window.MathJax) MathJax.typesetPromise([document.getElementById("modalBody")]);
+}
+
+function openLitModal(id){
+    let l = LITERATURE.find(x => x.id === id);
+    document.getElementById("modalBody").innerHTML = `
+        <h2 style="margin-bottom:5px; color:#1a1a2e;">${l.title}</h2>
+        <p style="font-size:13px; color:#888; margin-bottom:15px;">${l.desc}</p>
+        <div style="font-size:14px; line-height:1.6; color:#333;">${l.content}</div>
+        <button class="btn" onclick="window.open('${l.link}', '_blank')" style="background:#10b981; margin-top:20px;">📄 Открыть оригинал</button>
+        <button class="btn" onclick="closeModal()" style="background:#cbd5e1; color:#333; margin-top:10px;">Закрыть</button>
+    `;
+    document.getElementById("myModal").classList.add("active");
+    if(window.MathJax) MathJax.typesetPromise([document.getElementById("modalBody")]);
+}
+
+function renderCats(){
+    let ts=[...new Set(F.map(f=>f.t))];
+    let html="";
+    
+    // Вставляем карточку "Термины" в список категорий
+    html += `<div class="topic-card" onclick="switchTab('terms')"><div class="topic-card-left"><div style="font-weight:bold;font-size:16px;">📖 Термины</div><div style="color:#888;font-size:13px;margin-top:5px;">Основные понятия</div></div></div>`;
+    
+    ts.forEach(t=>{
+        let it=F.filter(f=>f.t===t),l=it.filter(f=>getS(f.id)==="learned").length;
+        let isC=selectedCats.includes(t);
+        html+=`<div class="topic-card" onclick="openTopic('${t}')"><div class="topic-card-left"><div style="font-weight:bold;font-size:16px;">${t}</div><div style="color:#888;font-size:13px;margin-top:5px;">Выучено: ${l} из ${it.length}</div></div><input type="checkbox" ${isC?'checked':''} onclick="toggleCat('${t}', event)"></div>`;
+    });
+    document.getElementById("topicsList").innerHTML=html;
+}
+
+let curT="";
+function openTopic(t){
+    curT=t;
+    switchTab('topic');
+    document.getElementById("topicTitle").innerText=t;
+    let html="";
+    F.filter(f=>f.t===t).forEach(f=>{
+        let s=getS(f.id),x=s==="learned"?"Выучено":(s==="learning"?"Учу":"Новое");
+        html+=`<div class="formula-item" onclick="openFormulaModal('${f.id}')"><span style="font-weight:500;">${f.n}</span><span class="badge ${s}">${x}</span></div>`;
+    });
+    document.getElementById("formulasList").innerHTML=html;
+}
+
+function openFormulaModal(id){
+    markSeen(id);
+    let f=F.find(x=>x.id===id);
+    let isHtml = f.l && (f.l.includes('<table') || f.l.includes('<div') || f.l.includes('<b>'));
+    let formulaHtml = "";
+    if (f.img) {
+        formulaHtml = `<img src="${f.img}" class="formula-img">`;
+    } else if (isHtml) {
+        formulaHtml = `<div class="formula-html">${f.l}</div>`;
+    } else {
+        formulaHtml = `$$${f.l}$$`;
+    }
+    let varsHtml = f.v;
+    if (Array.isArray(f.v)) varsHtml = f.v.map(item => `<b>${item.s}</b> — ${item.m}`).join("<br>");
+    document.getElementById("modalBody").innerHTML=`
+        <h2 style="margin-bottom:15px;">${f.n}</h2>
+        <div style="text-align:center;font-size:20px;padding:15px;background:#f8fafc;border-radius:10px;margin-bottom:15px;overflow-x:auto;">${formulaHtml}</div>
+        <div style="margin-bottom:15px;font-size:14px;line-height:1.5;color:#333;"><b>Смысл и тонкости:</b><br>${f.d||''}</div>
+        <div style="background:#f1f5f9;padding:12px;border-radius:8px;font-size:14px;margin-bottom:15px;line-height:1.6;">${varsHtml||''}</div>
+        <p style="font-size:13px;color:#888;margin-bottom:15px;">Повторений: ${getH(f.id)} из 5</p>
+        <button class="btn" onclick="openEditCardModal('${f.id}')" style="background:#f59e0b; margin-bottom:10px;">✏️ Редактировать</button>
+        <button class="btn" onclick="closeModal()">Закрыть</button>
+    `;
+    document.getElementById("myModal").classList.add("active");
+    if(window.MathJax && !f.img && !isHtml) MathJax.typesetPromise([document.getElementById("modalBody")]);
+}
+
+function closeModal(){document.getElementById("myModal").classList.remove("active")}
+
+function renderChart(){
+    let c=document.getElementById("chart");
+    if(!c)return;
+    c.innerHTML="";
+    let dates = Object.keys(h);
+    let totalDays = dates.length;
+    let streak = 0, maxStreak = 0;
+    if(dates.length > 0) {
+        dates.sort();
+        let prevDate = null;
+        dates.forEach(dStr => {
+            let d = new Date(dStr);
+            if(prevDate) {
+                let diff = (d - prevDate) / (1000 * 60 * 60 * 24);
+                if(diff === 1) { streak++; } else { streak = 1; }
+            } else { streak = 1; }
+            if(streak > maxStreak) maxStreak = streak;
+            prevDate = d;
+        });
+    }
+    document.getElementById("statTotalDays").innerText = totalDays;
+    document.getElementById("statStreak").innerText = maxStreak;
+    let ds=[];
+    for(let i=6;i>=0;i--){ let d=new Date(); d.setDate(d.getDate()-i); ds.push(d.toISOString().split('T')[0]); }
+    let m=1;
+    ds.forEach(d=>{ let x=h[d]||{l:0,r:0}; m=Math.max(m,x.l,x.r); });
+    let weekDays = ['Вс', 'Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб'];
+    let todayStr = new Date().toISOString().split('T')[0];
+    ds.forEach(d=>{
+        let x=h[d]||{l:0,r:0};
+        let dayOfWeek = new Date(d).getDay();
+        let isToday = (d === todayStr);
+        let arrow = isToday ? '<div style="font-size:12px; color:#4a6cf7; margin-bottom:2px;">⬇</div>' : '<div style="height:16px;"></div>';
+        c.innerHTML+=`<div class="chart-col"><div style="flex:1; width:100%; display:flex; flex-direction:column; justify-content:flex-end; align-items:center; gap:2px;"><div class="bar-learned" style="height:${(x.l/m)*100}%" title="Выучено: ${x.l}"></div><div class="bar-reviewed" style="height:${(x.r/m)*100}%" title="Повторено: ${x.r}"></div></div>${arrow}<div class="chart-label" style="font-weight:${isToday ? 'bold' : 'normal'}; color:${isToday ? '#4a6cf7' : '#888'};">${d.split('-').reverse().slice(0,2).join('.')}<br><span style="font-size:11px;">${weekDays[dayOfWeek]}</span></div></div>`;
+    });
+}
+
+let q=[],i=0,m="swipe",totalCount=0,successCount=0;
+let currentMode = 'swipe';
+
+function setMode(x){
+    m=x;
+    let ts=document.getElementById("tabSwipe"), tq=document.getElementById("tabQuiz");
+    if(ts){ts.style.background=m==="swipe"?"#4a6cf7":"#e5e7eb"; ts.style.color=m==="swipe"?"#fff":"#555";}
+    if(tq){tq.style.background=m==="quiz"?"#4a6cf7":"#e5e7eb"; tq.style.color=m==="quiz"?"#fff":"#555";}
+    renderTrain();
+}
+
+function startTrainTopic(){
+    q=F.filter(f=>f.t===curT).slice().sort((a,b)=>{
+        let o={new:0,learning:1,learned:2};
+        return o[getS(a.id)]-o[getS(b.id)];
+    });
+    totalCount=q.length; successCount=0; i=0;
+    currentMode='swipe';
+    switchTab('train'); setMode("swipe");
+}
+
+function startTrainAll(){
+    let aF=F.filter(f=>selectedCats.includes(f.t));
+    if(aF.length===0){alert("Выберите хотя бы одну категорию в разделе 'Выбрать категорию'!");return}
+    q=aF.slice().sort((a,b)=>{
+        let o={new:0,learning:1,learned:2};
+        return o[getS(a.id)]-o[getS(b.id)];
+    });
+    totalCount=q.length; successCount=0; i=0;
+    currentMode='swipe';
+    switchTab('train'); setMode("swipe");
+}
+
+function startTrainReview(){
+    let aF=F.filter(f=>selectedCats.includes(f.t) && (seen.includes(f.id) || getH(f.id) > 0));
+    if(aF.length===0){
+        alert("Вы еще не просмотрели ни одной формулы в выбранных категориях. Сначала откройте категорию и нажмите на формулу, либо потренируйтесь в 'Учить формулы'.");
+        return;
+    }
+    q=aF.slice().sort((a,b)=>{
+        let o={learning:0,learned:1,new:2};
+        return o[getS(a.id)]-o[getS(b.id)];
+    });
+    totalCount=q.length; successCount=0; i=0;
+    currentMode='swipe';
+    switchTab('train'); setMode("swipe");
+}
+
+function shuffle(a){return a.sort(()=>Math.random()-0.5)}
+
+function getTrainingData(mode) {
+    let baseData = [];
+    if(mode === 'formula-to-task') baseData = SPECIAL_TRAINING_DATA.formulaToTask;
+    else if(mode === 'task-to-formula') baseData = SPECIAL_TRAINING_DATA.taskToFormula;
+    else if(mode === 'derive') baseData = SPECIAL_TRAINING_DATA.derive;
+    else if(mode === 'dimensions') baseData = SPECIAL_TRAINING_DATA.dimensions;
+    let userData = customTraining[mode] || [];
+    return [...baseData, ...userData];
+}
+
+function startModeTrain(mode) {
+    currentMode = mode;
+    let data = getTrainingData(mode);
+    if(data.length === 0) { alert("Для этого режима пока нет данных."); return; }
+    q = shuffle([...data]);
+    totalCount = q.length; successCount = 0; i = 0;
+    switchTab('train'); renderModeTrain();
+}
+
+function renderModeTrain() {
+    let a = document.getElementById("trainArea");
+    if(q.length === 0) {
+        a.innerHTML = `<div style="text-align:center;padding:50px 0;"><div style="font-size:40px;">🎉</div><p>Все карточки пройдены!</p><button class="btn" onclick="switchTab('home')">На главную</button></div>`;
+        document.getElementById("counter").innerText = `${totalCount} / ${totalCount}`;
+        return;
+    }
+    if(i >= q.length) i = 0;
+    let item = q[i];
+    document.getElementById("counter").innerText = `${successCount} / ${totalCount}`;
+    let html = "";
+
+    if(currentMode === 'formula-to-task') {
+        let options = shuffle([item.correct, ...item.wrong]).map(opt => `<div class="opt" onclick="checkModeAnswer(this, '${opt.replace(/'/g, "\\'")}', '${item.correct.replace(/'/g, "\\'")}')">${opt}</div>`).join("");
+        html = `<div class="card-stack"><div class="swipe-card"><div class="formula-txt">$$${item.formula}$$</div><div style="font-size:14px;color:#888;margin-bottom:10px;">К какой задаче подходит?</div>${options}</div></div>`;
+    } 
+    else if(currentMode === 'task-to-formula') {
+        let options = shuffle([item.correct, ...item.wrong]).map(opt => `<div class="opt" onclick="checkModeAnswer(this, '${opt.replace(/'/g, "\\'")}', '${item.correct.replace(/'/g, "\\'")}')">$$${opt}$$</div>`).join("");
+        html = `<div class="card-stack"><div class="swipe-card"><div style="font-size:16px;margin-bottom:15px;text-align:center;">${item.task}</div>${options}</div></div>`;
+    }
+    else if(currentMode === 'derive') {
+        let options = shuffle([item.correct, ...item.wrong]).map(opt => `<div class="opt" onclick="checkModeAnswer(this, '${opt.replace(/'/g, "\\'")}', '${item.correct.replace(/'/g, "\\'")}')">$$${opt}$$</div>`).join("");
+        html = `<div class="card-stack"><div class="swipe-card"><div style="font-size:16px;margin-bottom:15px;text-align:center;">Дано: $${item.expr}$<br><br>${item.ask}</div>${options}</div></div>`;
+    }
+    else if(currentMode === 'dimensions') {
+        let options = shuffle([item.correct, ...item.wrong]).map(opt => `<div class="opt" onclick="checkModeAnswer(this, '${opt.replace(/'/g, "\\'")}', '${item.correct.replace(/'/g, "\\'")}')">$$${opt}$$</div>`).join("");
+        html = `<div class="card-stack"><div class="swipe-card"><div style="font-size:16px;margin-bottom:15px;text-align:center;">Какое выражение имеет размерность <b>${item.dim}</b>?</div>${options}</div></div>`;
+    }
+    a.innerHTML = html;
+    if(window.MathJax) MathJax.typesetPromise([a]);
+}
+
+function checkModeAnswer(el, selected, correct) {
+    if(el.classList.contains("correct") || el.classList.contains("wrong")) return;
+    let opts = el.parentElement.querySelectorAll(".opt");
+    opts.forEach(o => o.style.pointerEvents = "none");
+    let cleanSelected = selected.replace(/\s+/g, '');
+    let cleanCorrect = correct.replace(/\s+/g, '');
+    if(cleanSelected === cleanCorrect) {
+        el.classList.add("correct");
+        successCount++;
+        q.splice(i, 1);
+        if(i >= q.length && q.length > 0) i = 0;
+        setTimeout(() => renderModeTrain(), 1000);
+    } else {
+        el.classList.add("wrong");
+        opts.forEach(o => { if(o.innerText.trim().replace(/\s+/g, '') === correct.replace(/\s+/g, '')) o.classList.add("correct"); });
+        let f = q[i]; q.splice(i, 1); q.push(f);
+        if(i >= q.length) i = 0;
+        setTimeout(() => renderModeTrain(), 1500);
+    }
+}
+
+function renderTrain(){
+    let a=document.getElementById("trainArea");
+    if(q.length === 0){
+        a.innerHTML=`<div style="text-align:center;padding:50px 0;">
+            <div style="font-size:40px;">🎉</div>
+            <p style="margin:15px 0;">Вы прошли все карточки!</p>
+            <p style="font-size:13px;color:#888;">Правильно: ${successCount} из ${totalCount}</p>
+            <button class="btn" onclick="switchTab('home')">На главную</button>
+        </div>`;
+        document.getElementById("counter").innerText=`${totalCount} / ${totalCount}`;
+        return;
+    }
+    if(i >= q.length) { i=0; }
+    let f=q[i];
+    markSeen(f.id);
+    document.getElementById("counter").innerText=`${successCount} / ${totalCount}`;
+    
+    let isHtml = f.l && (f.l.includes('<table') || f.l.includes('<div') || f.l.includes('<b>'));
+    let formulaHtml = "";
+    if (f.img) {
+        formulaHtml = `<img src="${f.img}" class="formula-img">`;
+    } else if (isHtml) {
+        formulaHtml = `<div class="formula-html">${f.l}</div>`;
+    } else {
+        formulaHtml = `$$${f.l}$$`;
+    }
+    
+    if(m==="swipe"){
+        a.innerHTML=`
+        <div style="display:flex;gap:5px;margin-bottom:15px;">
+        <button class="btn" id="tabSwipe" style="margin:0;padding:8px;background:#4a6cf7;color:#fff;" onclick="setMode('swipe')">Свайпы</button>
+        <button class="btn" id="tabQuiz" style="margin:0;padding:8px;background:#e5e7eb;color:#555;" onclick="setMode('quiz')">Тест</button>
+        </div>
+        <div class="card-stack" id="stack">
+            <div class="swipe-card" id="card">
+                <div class="formula-txt">${formulaHtml}</div>
+                <div style="font-size:14px;color:#888;margin-bottom:5px;">Напишите название:</div>
+                <input type="text" class="input-ans" id="ansInput" autocomplete="off" placeholder="Введите ответ...">
+                <button class="btn" id="checkBtn" onclick="checkSwipeInput()">Проверить</button>
+                <p style="color:#aaa;font-size:12px;margin-top:20px;text-align:center;">Либо свайпните карточку влево (знаю) или вправо (не знаю)</p>
+            </div>
+        </div>
+        <div class="actions"><button class="btn-yes" onclick="swipeAction(true)">✓</button><button class="btn-no" onclick="swipeAction(false)">✕</button></div>`;
+        if(window.MathJax && !f.img && !isHtml) MathJax.typesetPromise([a]);
+        setupSwipe(document.getElementById("card"));
+        document.getElementById("ansInput").focus();
+        document.getElementById("ansInput").addEventListener("keypress", function(e) { if(e.key === 'Enter') checkSwipeInput(); });
+    } else {
+        let cn=f.n;
+        let ws=shuffle(F.filter(x=>x.id!==f.id).map(x=>x.n)).slice(0,3);
+        while(ws.length<3) ws.push("Другое правило "+(ws.length+1));
+        let oh=shuffle([cn,...ws]).map(o=>`<div class="opt" onclick="checkAns(this, ${o===cn}, '${f.id}')">${o}</div>`).join("");
+        
+        a.innerHTML=`
+        <div style="display:flex;gap:5px;margin-bottom:15px;">
+        <button class="btn" id="tabSwipe" style="margin:0;padding:8px;background:#e5e7eb;color:#555;" onclick="setMode('swipe')">Свайпы</button>
+        <button class="btn" id="tabQuiz" style="margin:0;padding:8px;background:#4a6cf7;color:#fff;" onclick="setMode('quiz')">Тест</button>
+        </div>
+        <div class="card-stack"><div class="swipe-card"><div class="formula-txt">${formulaHtml}</div><div style="font-size:14px;color:#888;margin-bottom:10px;">Что это за формула/правило?</div>${oh}</div></div>`;
+        if(window.MathJax && !f.img && !isHtml) MathJax.typesetPromise([a]);
+    }
+}
+
+function checkSwipeInput(){
+    let f=q[i];
+    let input=document.getElementById("ansInput");
+    let val=input.value.trim().toLowerCase();
+    let correct=f.n.trim().toLowerCase();
+    val=val.replace(/[.,\\/#!$%\\^&\\*;:{}=\\-_`~()]/g,"");
+    correct=correct.replace(/[.,\\/#!$%\\^&\\*;:{}=\\-_`~()]/g,"");
+    if(val === correct && val !== ""){
+        input.classList.add("correct");
+        input.disabled=true;
+        document.getElementById("checkBtn").style.display="none";
+        swipeAction(true);
+    } else {
+        input.classList.add("wrong");
+        input.disabled=true;
+        let btn=document.getElementById("checkBtn");
+        btn.innerText="Правильно: " + f.n;
+        btn.style.background="#10b981";
+        btn.onclick=()=>{ 
+            let card = q[i];
+            q.splice(i, 1);
+            q.push(card);
+            if(i >= q.length) i = 0;
+            renderTrain(); 
+        };
+    }
+}
+
+function swipeAction(isKnow){
+    let card = document.getElementById("card");
+    if (card) {
+        card.style.transition = "transform 0.3s ease-out, opacity 0.3s ease-out";
+        card.style.transform = `translate(${isKnow ? -400 : 400}px, 0px) rotate(${isKnow ? -30 : 30}deg)`;
+        card.style.opacity = "0";
+    }
+    let currentFormula = q[i];
+    if (isKnow) {
+        let id = currentFormula.id;
+        let os = getS(id);
+        p[id] = (p[id] || 0) + 1; 
+        log('r');
+        if (os !== 'learned' && getS(id) === 'learned') log('l');
+        save();
+        successCount++;
+        q.splice(i, 1); 
+        if(i >= q.length && q.length > 0) i = 0;
+    } else {
+        q.splice(i, 1);
+        q.push(currentFormula);
+        if(q.length > 0) i = i % q.length;
+    }
+    setTimeout(() => { renderTrain(); }, 300);
+}
+
+function checkAns(el, ok, id){
+    if(el.classList.contains("correct") || el.classList.contains("wrong")) return;
+    let opts = el.parentElement.querySelectorAll(".opt");
+    opts.forEach(o => o.style.pointerEvents = "none");
+    if(ok){
+        el.classList.add("correct");
+        let os=getS(id); p[id]=(p[id]||0)+1; log('r');
+        if(os!=='learned'&&getS(id)==='learned')log('l');
+        save();
+        successCount++;
+        q.splice(i, 1);
+        if(i >= q.length && q.length > 0) i = 0;
+        setTimeout(()=>{renderTrain()},1000);
+    } else {
+        el.classList.add("wrong");
+        opts.forEach(o => { if(o.innerText === q[i].n) o.classList.add("correct"); });
+        let f=q[i]; q.splice(i,1); q.push(f);
+        if(i >= q.length) i = 0;
+        setTimeout(()=>{renderTrain()},1500);
+    }
+}
+
+function setupSwipe(c){
+    if(!c) return;
+    let sx=0,sy=0,cx=0,cy=0,d=false;
+    c.onpointerdown=(e)=>{ if(e.target.tagName === 'INPUT' || e.target.tagName === 'BUTTON' || e.target.tagName === 'IMG') return; d=true;sx=e.clientX;sy=e.clientY;c.style.transition="none" };
+    c.onpointermove=(e)=>{ if(!d)return;cx=e.clientX-sx;cy=e.clientY-sy; c.style.transform=`translate(${cx}px,${cy}px) rotate(${cx/20}deg)` };
+    c.onpointerup=(e)=>{ if(!d)return; d=false;c.style.transition="transform 0.2s"; if(cx>80)swipeAction(false); else if(cx<-80)swipeAction(true); else c.style.transform=`translate(0px,0px) rotate(0deg)`; }
+}
+
+function resetProgress(){
+    if(confirm("Вы уверены? Это сбросит изучение всех формул (статусы станут «Новыми»), но оставит историю активности.")){
+        p = {}; seen = []; save(); alert("Прогресс изучения сброшен!"); renderCats();
+    }
+}
+
+function openAddCardModal() {
+    let cats = [...new Set(F.map(f => f.t))];
+    let catOptions = cats.map(c => `<option value="${c}">${c}</option>`).join("");
+    catOptions += `<option value="new">--- Создать новый раздел ---</option>`;
+
+    let modeOptions = `
+        <option value="normal">Обычная формула (для Свайпов и Тестов)</option>
+        <option value="formula-to-task">Формула → задача</option>
+        <option value="task-to-formula">Задача → формула</option>
+        <option value="derive">Выведи/преобразуй</option>
+        <option value="dimensions">Единицы и размерности</option>
+    `;
+
+    document.getElementById("modalBody").innerHTML = `
+        <h2 style="margin-bottom:15px;">Добавить карточку</h2>
+        <div class="form-group">
+            <label>Куда добавить?</label>
+            <select id="addDestination" onchange="toggleAddFields()">
+                <option value="formula">В обычные формулы (Свайпы/Тест)</option>
+                <option value="training">В специальный режим тренировки</option>
+            </select>
+        </div>
+
+        <div id="groupFields">
+            <div class="form-group">
+                <label>Раздел:</label>
+                <select id="addCatSelect" onchange="toggleNewCatInput()">${catOptions}</select>
+                <input type="text" id="addNewCatInput" placeholder="Название нового раздела" style="display:none; margin-top:5px;">
+            </div>
+            <div class="form-group">
+                <label>Название формулы (или правила):</label>
+                <input type="text" id="addName" placeholder="Например: Закон Ома">
+            </div>
+            <div class="form-group">
+                <label>Формула/Текст (LaTeX или HTML):</label>
+                <input type="text" id="addLatex" placeholder="Например: I = \\frac{U}{R}">
+                <div class="latex-help">
+                    <button type="button" onclick="insertLatex('\\\\frac{a}{b}')">a/b</button>
+                    <button type="button" onclick="insertLatex('\\\\sqrt{x}')">√x</button>
+                    <button type="button" onclick="insertLatex('x^{2}')">x²</button>
+                    <button type="button" onclick="insertLatex('x_{i}')">x_i</button>
+                    <button type="button" onclick="insertLatex('\\\\sum_{i=1}^{n}')">Σ</button>
+                    <button type="button" onclick="insertLatex('\\\\int_{a}^{b}')">∫</button>
+                    <button type="button" onclick="insertLatex('\\\\partial')">∂</button>
+                    <button type="button" onclick="insertLatex('\\\\alpha')">α</button>
+                    <button type="button" onclick="insertLatex('\\\\beta')">β</button>
+                    <button type="button" onclick="insertLatex('\\\\gamma')">γ</button>
+                    <button type="button" onclick="insertLatex('\\\\delta')">δ</button>
+                    <button type="button" onclick="insertLatex('\\\\varepsilon')">ε</button>
+                    <button type="button" onclick="insertLatex('\\\\theta')">θ</button>
+                    <button type="button" onclick="insertLatex('\\\\lambda')">λ</button>
+                    <button type="button" onclick="insertLatex('\\\\mu')">μ</button>
+                    <button type="button" onclick="insertLatex('\\\\nu')">ν</button>
+                    <button type="button" onclick="insertLatex('\\\\pi')">π</button>
+                    <button type="button" onclick="insertLatex('\\\\rho')">ρ</button>
+                    <button type="button" onclick="insertLatex('\\\\sigma')">σ</button>
+                    <button type="button" onclick="insertLatex('\\\\tau')">τ</button>
+                    <button type="button" onclick="insertLatex('\\\\phi')">φ</button>
+                    <button type="button" onclick="insertLatex('\\\\chi')">χ</button>
+                    <button type="button" onclick="insertLatex('\\\\psi')">ψ</button>
+                    <button type="button" onclick="insertLatex('\\\\omega')">ω</button>
+                    <button type="button" onclick="insertLatex('\\\\Omega')">Ω</button>
+                    <button type="button" onclick="insertLatex('\\\\hbar')">ħ</button>
+                    <button type="button" onclick="insertLatex('\\\\infty')">∞</button>
+                    <button type="button" onclick="insertLatex('\\\\approx')">≈</button>
+                    <button type="button" onclick="insertLatex('\\\\neq')">≠</button>
+                    <button type="button" onclick="insertLatex('\\\\leq')">≤</button>
+                    <button type="button" onclick="insertLatex('\\\\geq')">≥</button>
+                    <button type="button" onclick="insertLatex('\\\\times')">×</button>
+                    <button type="button" onclick="insertLatex('\\\\cdot')">·</button>
+                    <button type="button" onclick="insertLatex('\\\\pm')">±</button>
+                    <button type="button" onclick="insertLatex('\\\\rightarrow')">→</button>
+                    <button type="button" onclick="insertLatex('\\\\Rightarrow')">⇒</button>
+                    <button type="button" onclick="insertLatex('\\\\leftrightarrow')">↔</button>
+                    <button type="button" onclick="insertLatex('\\\\left( x \\\\right)')">(x)</button>
+                    <button type="button" onclick="insertLatex('\\\\left[ x \\\\right]')">[x]</button>
+                    <button type="button" onclick="insertLatex('\\\\langle x \\\\rangle')">⟨x⟩</button>
+                    <button type="button" onclick="insertLatex('\\\\vec{v}')">v⃗</button>
+                    <button type="button" onclick="insertLatex('\\\\bar{x}')">x̄</button>
+                    <button type="button" onclick="insertLatex('\\\\hat{H}')">Ĥ</button>
+                    <button type="button" onclick="insertLatex('\\\\sin(x)')">sin</button>
+                    <button type="button" onclick="insertLatex('\\\\cos(x)')">cos</button>
+                    <button type="button" onclick="insertLatex('\\\\tan(x)')">tan</button>
+                    <button type="button" onclick="insertLatex('\\\\ln(x)')">ln</button>
+                    <button type="button" onclick="insertLatex('\\\\log_{a}(x)')">log_a</button>
+                    <button type="button" onclick="insertLatex('\\\\exp(x)')">exp</button>
+                    <button type="button" onclick="insertLatex('\\\\lim_{x \\\\to 0}')">lim</button>
+                    <button type="button" onclick="insertLatex('\\\\prod_{i=1}^{n}')">Π</button>
+                </div>
+            </div>
+            <div style="font-size:12px; color:#888; margin-bottom:10px; text-align:center;">ИЛИ загрузите картинку:</div>
+            <div class="form-group"><input type="file" id="addImg" accept="image/*" style="border:none; padding:0;"></div>
+            <div class="form-group"><label>Смысл и тонкости:</label><input type="text" id="addMeaning" placeholder="Что это и зачем"></div>
+            <div class="form-group"><label>Обозначения (необязательно):</label><input type="text" id="addVars" placeholder="I — ток, U — напряжение"></div>
+        </div>
+
+        <div id="trainingFields" style="display:none;">
+            <div class="form-group">
+                <label>Тип тренировки:</label>
+                <select id="addTrainingMode">${modeOptions}</select>
+            </div>
+            <div class="form-group"><label>Вопрос / Условие:</label><input type="text" id="addTrainQuestion" placeholder="Введите вопрос или условие задачи"></div>
+            <div class="form-group"><label>Правильный ответ:</label><input type="text" id="addTrainCorrect" placeholder="Правильный ответ (LaTeX или текст)"></div>
+            <div class="form-group"><label>Неправильные ответы (через запятую):</label><input type="text" id="addTrainWrong" placeholder="Ответ 1, Ответ 2"></div>
+        </div>
+
+        <button class="btn" onclick="saveNewCard()">Сохранить</button>
+    `;
+    document.getElementById("myModal").classList.add("active");
+}
+
+function toggleAddFields() {
+    let dest = document.getElementById("addDestination").value;
+    document.getElementById("groupFields").style.display = dest === "formula" ? "block" : "none";
+    document.getElementById("trainingFields").style.display = dest === "training" ? "block" : "none";
+}
+
+function insertLatex(text) {
+    let input = document.getElementById("addLatex") || document.getElementById("editLatex");
+    if(input) {
+        let start = input.selectionStart;
+        let end = input.selectionEnd;
+        let val = input.value;
+        input.value = val.substring(0, start) + text + val.substring(end);
+        input.focus();
+        input.selectionStart = input.selectionEnd = start + text.length;
+    }
+}
+
+function toggleNewCatInput() {
+    let sel = document.getElementById("addCatSelect");
+    let inp = document.getElementById("addNewCatInput");
+    if(sel.value === "new") { inp.style.display = "block"; inp.focus(); } else { inp.style.display = "none"; }
+}
+
+function saveNewCard() {
+    let dest = document.getElementById("addDestination").value;
+    if (dest === "formula") {
+        let catVal = document.getElementById("addCatSelect").value;
+        if(catVal === "new") {
+            catVal = document.getElementById("addNewCatInput").value.trim();
+            if(!catVal) { alert("Введите название нового раздела!"); return; }
+        }
+        let name = document.getElementById("addName").value.trim();
+        let latex = document.getElementById("addLatex").value.trim();
+        let imgFile = document.getElementById("addImg").files[0];
+        let meaning = document.getElementById("addMeaning").value.trim();
+        let vars = document.getElementById("addVars").value.trim();
+        if(!name) { alert("Введите название формулы!"); return; }
+        if(!latex && !imgFile) { alert("Введите формулу (LaTeX) или загрузите картинку!"); return; }
+        let newId = "custom_" + Date.now();
+        if(imgFile) {
+            let reader = new FileReader();
+            reader.onload = function(e) { addToFAndSave(newId, catVal, name, latex, e.target.result, meaning, vars); };
+            reader.readAsDataURL(imgFile);
+        } else {
+            addToFAndSave(newId, catVal, name, latex, null, meaning, vars);
+        }
+    } else {
+        let mode = document.getElementById("addTrainingMode").value;
+        if(mode === "normal") { alert("Выберите тип тренировки (кроме 'Обычная формула')."); return; }
+        let question = document.getElementById("addTrainQuestion").value.trim();
+        let correct = document.getElementById("addTrainCorrect").value.trim();
+        let wrongStr = document.getElementById("addTrainWrong").value.trim();
+        if(!question || !correct || !wrongStr) { alert("Заполните все поля для тренировки!"); return; }
+        let wrong = wrongStr.split(',').map(s => s.trim()).filter(s => s);
+        if(wrong.length === 0) { alert("Введите хотя бы один неправильный ответ!"); return; }
+        if(!customTraining[mode]) customTraining[mode] = [];
+        let item = {};
+        if (mode === 'formula-to-task') item = { title: question, formula: correct, correct: wrong[0] || "Задача не указана", wrong: wrong.slice(1) };
+        else if (mode === 'task-to-formula') item = { task: question, correct: correct, wrong: wrong };
+        else if (mode === 'derive') item = { expr: question, ask: "Выразите", correct: correct, wrong: wrong };
+        else if (mode === 'dimensions') item = { dim: question, correct: correct, wrong: wrong };
+        customTraining[mode].push(item);
+        save();
+        closeModal();
+        alert("Карточка добавлена в тренировки!");
+    }
+}
+
+function addToFAndSave(id, cat, name, latex, imgBase64, meaning, vars) {
+    let newF = { id: id, t: cat, n: name, l: latex, img: imgBase64, d: meaning, v: vars };
+    customF.push(newF);
+    updateF();
+    if(!selectedCats.includes(cat)) selectedCats.push(cat);
+    save();
+    closeModal();
+    alert("Карточка успешно добавлена!");
+    if(document.getElementById('screenCats').classList.contains('active')) renderCats();
+    if(curT === cat && document.getElementById('screenTopic').classList.contains('active')) openTopic(cat);
+}
+
+function openEditCardModal(id) {
+    let f = F.find(x => x.id === id);
+    if(!f) return;
+    let cats = [...new Set(F.map(x => x.t))];
+    let options = cats.map(c => `<option value="${c}" ${c === f.t ? 'selected' : ''}>${c}</option>`).join("");
+
+    document.getElementById("modalBody").innerHTML = `
+        <h2 style="margin-bottom:15px;">Редактировать карточку</h2>
+        <div class="form-group"><label>Раздел:</label><select id="editCatSelect">${options}</select></div>
+        <div class="form-group"><label>Название:</label><input type="text" id="editName" value="${f.n}"></div>
+        <div class="form-group">
+            <label>Формула/Текст (LaTeX или HTML):</label>
+            <input type="text" id="editLatex" value="${f.l||''}">
+            <div class="latex-help">
+                <button type="button" onclick="insertLatex('\\\\frac{a}{b}')">a/b</button>
+                <button type="button" onclick="insertLatex('\\\\sqrt{x}')">√x</button>
+                <button type="button" onclick="insertLatex('x^{2}')">x²</button>
+                <button type="button" onclick="insertLatex('x_{i}')">x_i</button>
+                <button type="button" onclick="insertLatex('\\\\sum_{i=1}^{n}')">Σ</button>
+                <button type="button" onclick="insertLatex('\\\\int_{a}^{b}')">∫</button>
+                <button type="button" onclick="insertLatex('\\\\partial')">∂</button>
+                <button type="button" onclick="insertLatex('\\\\alpha')">α</button>
+                <button type="button" onclick="insertLatex('\\\\beta')">β</button>
+                <button type="button" onclick="insertLatex('\\\\gamma')">γ</button>
+                <button type="button" onclick="insertLatex('\\\\delta')">δ</button>
+                <button type="button" onclick="insertLatex('\\\\varepsilon')">ε</button>
+                <button type="button" onclick="insertLatex('\\\\theta')">θ</button>
+                <button type="button" onclick="insertLatex('\\\\lambda')">λ</button>
+                <button type="button" onclick="insertLatex('\\\\mu')">μ</button>
+                <button type="button" onclick="insertLatex('\\\\nu')">ν</button>
+                <button type="button" onclick="insertLatex('\\\\pi')">π</button>
+                <button type="button" onclick="insertLatex('\\\\rho')">ρ</button>
+                <button type="button" onclick="insertLatex('\\\\sigma')">σ</button>
+                <button type="button" onclick="insertLatex('\\\\tau')">τ</button>
+                <button type="button" onclick="insertLatex('\\\\phi')">φ</button>
+                <button type="button" onclick="insertLatex('\\\\chi')">χ</button>
+                <button type="button" onclick="insertLatex('\\\\psi')">ψ</button>
+                <button type="button" onclick="insertLatex('\\\\omega')">ω</button>
+                <button type="button" onclick="insertLatex('\\\\Omega')">Ω</button>
+                <button type="button" onclick="insertLatex('\\\\hbar')">ħ</button>
+                <button type="button" onclick="insertLatex('\\\\infty')">∞</button>
+                <button type="button" onclick="insertLatex('\\\\approx')">≈</button>
+                <button type="button" onclick="insertLatex('\\\\neq')">≠</button>
+                <button type="button" onclick="insertLatex('\\\\leq')">≤</button>
+                <button type="button" onclick="insertLatex('\\\\geq')">≥</button>
+                <button type="button" onclick="insertLatex('\\\\times')">×</button>
+                <button type="button" onclick="insertLatex('\\\\cdot')">·</button>
+                <button type="button" onclick="insertLatex('\\\\pm')">±</button>
+                <button type="button" onclick="insertLatex('\\\\rightarrow')">→</button>
+                <button type="button" onclick="insertLatex('\\\\Rightarrow')">⇒</button>
+                <button type="button" onclick="insertLatex('\\\\leftrightarrow')">↔</button>
+                <button type="button" onclick="insertLatex('\\\\left( x \\\\right)')">(x)</button>
+                <button type="button" onclick="insertLatex('\\\\left[ x \\\\right]')">[x]</button>
+                <button type="button" onclick="insertLatex('\\\\langle x \\\\rangle')">⟨x⟩</button>
+                <button type="button" onclick="insertLatex('\\\\vec{v}')">v⃗</button>
+                <button type="button" onclick="insertLatex('\\\\bar{x}')">x̄</button>
+                <button type="button" onclick="insertLatex('\\\\hat{H}')">Ĥ</button>
+                <button type="button" onclick="insertLatex('\\\\sin(x)')">sin</button>
+                <button type="button" onclick="insertLatex('\\\\cos(x)')">cos</button>
+                <button type="button" onclick="insertLatex('\\\\tan(x)')">tan</button>
+                <button type="button" onclick="insertLatex('\\\\ln(x)')">ln</button>
+                <button type="button" onclick="insertLatex('\\\\log_{a}(x)')">log_a</button>
+                <button type="button" onclick="insertLatex('\\\\exp(x)')">exp</button>
+                <button type="button" onclick="insertLatex('\\\\lim_{x \\\\to 0}')">lim</button>
+                <button type="button" onclick="insertLatex('\\\\prod_{i=1}^{n}')">Π</button>
+            </div>
+        </div>
+        <div style="font-size:12px; color:#888; margin-bottom:10px; text-align:center;">ИЛИ загрузите новую картинку (оставьте пустым, чтобы не менять):</div>
+        <div class="form-group"><input type="file" id="editImg" accept="image/*" style="border:none; padding:0;"></div>
+        <div class="form-group"><label>Смысл и тонкости:</label><textarea id="editMeaning" rows="4">${f.d||''}</textarea></div>
+        <div class="form-group"><label>Обозначения (необязательно):</label><textarea id="editVars" rows="2">${f.v||''}</textarea></div>
+        <button class="btn" onclick="updateCard('${f.id}')" style="background:#10b981;">Сохранить изменения</button>
+        <button class="btn" onclick="deleteCard('${f.id}')" style="background:#ef4444; margin-top:5px;">Удалить карточку</button>
+        <button class="btn" onclick="closeModal()" style="background:#cbd5e1; color:#333; margin-top:5px;">Отмена</button>
+    `;
+}
+
+function updateCard(id) {
+    let f = F.find(x => x.id === id);
+    if(!f) return;
+    let cat = document.getElementById("editCatSelect").value;
+    let name = document.getElementById("editName").value.trim();
+    let latex = document.getElementById("editLatex").value.trim();
+    let meaning = document.getElementById("editMeaning").value.trim();
+    let vars = document.getElementById("editVars").value.trim();
+    let imgFile = document.getElementById("editImg").files[0];
+    if(!name) { alert("Введите название!"); return; }
+    f.t = cat; f.n = name; f.l = latex; f.d = meaning; f.v = vars;
+    if(imgFile) {
+        let reader = new FileReader();
+        reader.onload = function(e) { f.img = e.target.result; finishUpdate(id, cat); };
+        reader.readAsDataURL(imgFile);
+    } else { finishUpdate(id, cat); }
+}
+
+function finishUpdate(id, cat) {
+    let idx = customF.findIndex(x => x.id === id);
+    if(idx !== -1) { customF[idx] = F.find(x => x.id === id); } else { let f = F.find(x => x.id === id); if(f) customF.push(f); }
+    save(); closeModal(); alert("Карточка обновлена!");
+    if(document.getElementById('screenCats').classList.contains('active')) renderCats();
+    if(curT === cat && document.getElementById('screenTopic').classList.contains('active')) openTopic(cat);
+}
+
+function deleteCard(id) {
+    if(confirm("Вы уверены, что хотите удалить эту карточку?")) {
+        let idx = customF.findIndex(x => x.id === id);
+        if(idx !== -1) customF.splice(idx, 1);
+        save(); updateF(); closeModal(); alert("Карточка удалена!");
+        if(document.getElementById('screenCats').classList.contains('active')) renderCats();
+        if(curT && document.getElementById('screenTopic').classList.contains('active')) openTopic(curT);
+    }
+}
+
+switchTab('home');
+</script>
+</body>
+</html>
