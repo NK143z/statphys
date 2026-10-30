@@ -16,7 +16,7 @@
         }
     };
 </script>
-<script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js" async></script>
+<script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js"></script>
 <style>
 *{box-sizing:border-box;margin:0;padding:0;user-select:none;font-family:sans-serif}
 body{background:#f4f6fb;color:#1a1a2e;padding:20px}
@@ -58,13 +58,8 @@ h1{font-size:22px;margin-bottom:10px}
 .legend span{display:flex;align-items:center;gap:5px}
 .dot{width:10px;height:10px;border-radius:50%;display:inline-block}
 input[type="checkbox"]{width:22px;height:22px;cursor:pointer;accent-color:#4a6cf7}
-.btn-clean {
-    background: #fff; color: #333; border: 1px solid #ccc; padding: 14px;
-    border-radius: 10px; font-size: 16px; font-weight: bold; width: 100%;
-    cursor: pointer; margin-top: 12px; transition: all 0.2s;
-    display: flex; align-items: center; justify-content: center; gap: 8px;
-}
-.btn-clean:active { background: #eee; border-color: #999; }
+.btn-clean{background:#fff;color:#333;border:1px solid #ccc;padding:14px;border-radius:10px;font-size:16px;font-weight:bold;width:100%;cursor:pointer;margin-top:12px;transition:all 0.2s;display:flex;align-items:center;justify-content:center;gap:8px}
+.btn-clean:active{background:#eee;border-color:#999}
 .stat-row{display:flex;gap:10px;margin-bottom:15px;}
 .stat-card{background:#fff;padding:15px;border-radius:12px;flex:1;box-shadow:0 2px 8px rgba(0,0,0,0.05);text-align:center;}
 .stat-val{font-size:24px;font-weight:bold;color:#4a6cf7;margin-bottom:5px;}
@@ -72,26 +67,26 @@ input[type="checkbox"]{width:22px;height:22px;cursor:pointer;accent-color:#4a6cf
 .form-group{margin-bottom:12px;}
 .form-group label{display:block;font-size:13px;color:#555;margin-bottom:4px;font-weight:bold;}
 .form-group input, .form-group select, .form-group textarea{width:100%;padding:10px;border:1px solid #cbd5e1;border-radius:8px;font-size:14px;font-family:inherit;}
-table.rule-table { width: 100%; border-collapse: collapse; margin: 10px 0; font-size: 13px; word-break: break-word; }
-table.rule-table th, table.rule-table td { border: 1px solid #cbd5e1; padding: 6px; text-align: left; vertical-align: top; }
-table.rule-table th { background-color: #f1f5f9; font-weight: bold; color: #333; }
-.grid-container { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; margin-bottom: 20px; }
-.grid-container .task-group-title { grid-column: 1 / -1; margin-top: 10px; margin-bottom: 0px; }
-.task-box { background: #fff; border-radius: 12px; padding: 16px; box-shadow: 0 2px 8px rgba(0,0,0,0.05); cursor: pointer; border-left: 3px solid #ccc; display: flex; flex-direction: column; justify-content: center;}
-.task-box h3 { font-size: 13px; margin-bottom: 6px; color: #1a1a2e; }
-.task-box p { font-size: 12px; color: #666; line-height: 1.4; }
-@media (max-width: 400px) { .grid-container { grid-template-columns: 1fr; } .task-box h3 { font-size: 15px; } .task-box p { font-size: 13px; } }
-.task-group-title { font-size: 15px; font-weight: bold; color: #4a6cf7; margin: 20px 0 10px 0; padding-bottom: 5px; border-bottom: 1px solid #e5e7eb; }
-.latex-help { display: flex; flex-wrap: wrap; gap: 5px; margin-top: 5px; margin-bottom: 10px; max-height: 120px; overflow-y: auto; padding-bottom: 5px; }
-.latex-help button { background: #e2e8f0; border: none; padding: 5px 8px; border-radius: 6px; font-size: 12px; cursor: pointer; color: #333; }
-.latex-help button:active { background: #cbd5e1; }
-.book-card { background: #fff; padding: 16px; border-radius: 12px; margin-bottom: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.05); cursor: pointer; transition: transform 0.1s; border-left: 4px solid #4a6cf7; }
-.book-card:active { transform: scale(0.98); }
-.book-card h3 { font-size: 16px; margin-bottom: 4px; color: #1a1a2e; }
-.book-card p { font-size: 13px; color: #666; }
-.mode-card { background: #fff; padding: 16px; border-radius: 12px; margin-bottom: 10px; box-shadow: 0 2px 8px rgba(0,0,0,0.05); cursor: pointer; border-left: 4px solid #8b5cf6; }
-.mode-card h3 { font-size: 15px; margin-bottom: 4px; color: #1a1a2e; }
-.mode-card p { font-size: 13px; color: #666; }
+table.rule-table{width:100%;border-collapse:collapse;margin:10px 0;font-size:13px;word-break:break-word;}
+table.rule-table th, table.rule-table td{border:1px solid #cbd5e1;padding:6px;text-align:left;vertical-align:top;}
+table.rule-table th{background-color:#f1f5f9;font-weight:bold;color:#333;}
+.grid-container{display:grid;grid-template-columns:repeat(2, 1fr);gap:10px;margin-bottom:20px;}
+.grid-container .task-group-title{grid-column:1 / -1;margin-top:10px;margin-bottom:0px;}
+.task-box{background:#fff;border-radius:12px;padding:16px;box-shadow:0 2px 8px rgba(0,0,0,0.05);cursor:pointer;border-left:3px solid #ccc;display:flex;flex-direction:column;justify-content:center;}
+.task-box h3{font-size:13px;margin-bottom:6px;color:#1a1a2e;}
+.task-box p{font-size:12px;color:#666;line-height:1.4;}
+@media (max-width: 400px){.grid-container{grid-template-columns:1fr;}.task-box h3{font-size:15px;}.task-box p{font-size:13px;}}
+.task-group-title{font-size:15px;font-weight:bold;color:#4a6cf7;margin:20px 0 10px 0;padding-bottom:5px;border-bottom:1px solid #e5e7eb;}
+.latex-help{display:flex;flex-wrap:wrap;gap:5px;margin-top:5px;margin-bottom:10px;max-height:120px;overflow-y:auto;padding-bottom:5px;}
+.latex-help button{background:#e2e8f0;border:none;padding:5px 8px;border-radius:6px;font-size:12px;cursor:pointer;color:#333;}
+.latex-help button:active{background:#cbd5e1;}
+.book-card{background:#fff;padding:16px;border-radius:12px;margin-bottom:12px;box-shadow:0 2px 8px rgba(0,0,0,0.05);cursor:pointer;transition:transform 0.1s;border-left:4px solid #4a6cf7;}
+.book-card:active{transform:scale(0.98);}
+.book-card h3{font-size:16px;margin-bottom:4px;color:#1a1a2e;}
+.book-card p{font-size:13px;color:#666;}
+.mode-card{background:#fff;padding:16px;border-radius:12px;margin-bottom:10px;box-shadow:0 2px 8px rgba(0,0,0,0.05);cursor:pointer;border-left:4px solid #8b5cf6;}
+.mode-card h3{font-size:15px;margin-bottom:4px;color:#1a1a2e;}
+.mode-card p{font-size:13px;color:#666;}
 </style>
 </head>
 <body>
@@ -177,8 +172,10 @@ table.rule-table th { background-color: #f1f5f9; font-weight: bold; color: #333;
 <script>
 function typesetMath(element) {
     if (!element) return;
-    if (window.MathJax && window.MathJax.typesetPromise) {
-        MathJax.typesetPromise([element]).catch(function (err) {
+    if (window.MathJax && window.MathJax.startup && window.MathJax.startup.promise) {
+        window.MathJax.startup.promise.then(() => {
+            return window.MathJax.typesetPromise([element]);
+        }).catch(function (err) {
             console.log('MathJax error:', err.message);
         });
     } else {
@@ -1136,6 +1133,7 @@ function deleteCard(id) {
 }
 
 switchTab('home');
+typesetMath(document.body);
 </script>
 </body>
 </html>
