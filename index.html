@@ -4,7 +4,18 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Статфизика</title>
-<script>window.MathJax={tex:{inlineMath:[['$','$']]},svg:{fontCache:'global'}};</script>
+<script>
+window.MathJax = {
+    tex: {
+        inlineMath: [['$', '$'], ['\\(', '\\)']],
+        displayMath: [['$$', '$$'], ['\\[', '\\]']]
+    },
+    svg: { fontCache: 'global' },
+    startup: {
+        typeset: false // Отключаем автоматический рендеринг при загрузке, будем вызывать вручную
+    }
+};
+</script>
 <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js" async></script>
 <style>
 *{box-sizing:border-box;margin:0;padding:0;user-select:none;font-family:sans-serif}
@@ -390,6 +401,24 @@ if(selectedCats.length===0 && !localStorage.getItem("cats_init")){
     selectedCats=[...allCats];localStorage.setItem("cats_init","true");save();
 }
 
+// ФУНКЦИЯ ДЛЯ БЕЗОПАСНОГО РЕНДЕРИНГА ФОРМУЛ
+function renderMath(element) {
+    if (!element) return;
+    if (window.MathJax && window.MathJax.typesetPromise) {
+        MathJax.typesetPromise([element]).catch(err => console.log('MathJax error:', err));
+    } else {
+        let retries = 0;
+        const interval = setInterval(() => {
+            if (window.MathJax && window.MathJax.typesetPromise) {
+                clearInterval(interval);
+                MathJax.typesetPromise([element]).catch(err => console.log('MathJax error:', err));
+            }
+            retries++;
+            if (retries > 50) clearInterval(interval);
+        }, 100);
+    }
+}
+
 function toggleCat(cat, e) {
     if(e) e.stopPropagation();
     if(selectedCats.includes(cat)){selectedCats=selectedCats.filter(c=>c!==cat)}else{selectedCats.push(cat)}
@@ -436,7 +465,7 @@ function openTermModal(id){
         <button class="btn" onclick="closeModal()" style="margin-top:20px;">Закрыть</button>
     `;
     document.getElementById("myModal").classList.add("active");
-    if(window.MathJax) MathJax.typesetPromise([document.getElementById("modalBody")]);
+    renderMath(document.getElementById("modalBody"));
 }
 
 function renderTasks(){
@@ -471,7 +500,7 @@ function openTaskModal(title){
         <button class="btn" onclick="closeModal()" style="margin-top:20px;">Закрыть</button>
     `;
     document.getElementById("myModal").classList.add("active");
-    if(window.MathJax) MathJax.typesetPromise([document.getElementById("modalBody")]);
+    renderMath(document.getElementById("modalBody"));
 }
 
 function openLitModal(id){
@@ -484,7 +513,7 @@ function openLitModal(id){
         <button class="btn" onclick="closeModal()" style="background:#cbd5e1; color:#333; margin-top:10px;">Закрыть</button>
     `;
     document.getElementById("myModal").classList.add("active");
-    if(window.MathJax) MathJax.typesetPromise([document.getElementById("modalBody")]);
+    renderMath(document.getElementById("modalBody"));
 }
 
 function renderCats(){
@@ -539,7 +568,7 @@ function openFormulaModal(id){
         <button class="btn" onclick="closeModal()">Закрыть</button>
     `;
     document.getElementById("myModal").classList.add("active");
-    if(window.MathJax && !f.img && !isHtml) MathJax.typesetPromise([document.getElementById("modalBody")]);
+    if(!f.img && !isHtml) renderMath(document.getElementById("modalBody"));
 }
 
 function closeModal(){document.getElementById("myModal").classList.remove("active")}
@@ -618,6 +647,11 @@ function startTrainReview(){
     let aF=F.filter(f=>selectedCats.includes(f.t) && (seen.includes(f.id) || getH(f.id) > 0));
     if(aF.length===0){
         alert("Вы еще не просмотрели ни одной формулы в выбранных категориях. Сначала откройте категорию и нажмите на формулу, либо потренируйтесь в 'Учить формулы'.");
+        return
+        function startTrainReview(){
+    let aF=F.filter(f=>selectedCats.includes(f.t) && (seen.includes(f.id) || getH(f.id) > 0));
+    if(aF.length===0){
+        alert("Вы еще не просмотрели ни одной формулы в выбранных категориях. Сначала откройте категорию и нажмите на формулу, либо потренируйтесь в 'Учить формулы'.");
         return;
     }
     q=aF.slice().sort((a,b)=>{
@@ -679,7 +713,7 @@ function renderModeTrain() {
         html = `<div class="card-stack"><div class="swipe-card"><div style="font-size:16px;margin-bottom:15px;text-align:center;">Какое выражение имеет размерность <b>${item.dim}</b>?</div>${options}</div></div>`;
     }
     a.innerHTML = html;
-    if(window.MathJax) MathJax.typesetPromise([a]);
+    renderMath(a);
 }
 
 function checkModeAnswer(el, selected, correct) {
@@ -746,7 +780,7 @@ function renderTrain(){
             </div>
         </div>
         <div class="actions"><button class="btn-yes" onclick="swipeAction(true)">✓</button><button class="btn-no" onclick="swipeAction(false)">✕</button></div>`;
-        if(window.MathJax && !f.img && !isHtml) MathJax.typesetPromise([a]);
+        if(!f.img && !isHtml) renderMath(a);
         setupSwipe(document.getElementById("card"));
         document.getElementById("ansInput").focus();
         document.getElementById("ansInput").addEventListener("keypress", function(e) { if(e.key === 'Enter') checkSwipeInput(); });
@@ -762,7 +796,7 @@ function renderTrain(){
         <button class="btn" id="tabQuiz" style="margin:0;padding:8px;background:#4a6cf7;color:#fff;" onclick="setMode('quiz')">Тест</button>
         </div>
         <div class="card-stack"><div class="swipe-card"><div class="formula-txt">${formulaHtml}</div><div style="font-size:14px;color:#888;margin-bottom:10px;">Что это за формула/правило?</div>${oh}</div></div>`;
-        if(window.MathJax && !f.img && !isHtml) MathJax.typesetPromise([a]);
+        if(!f.img && !isHtml) renderMath(a);
     }
 }
 
