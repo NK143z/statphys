@@ -5,16 +5,16 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Статфизика</title>
 <script>
-window.MathJax = {
-    tex: {
-        inlineMath: [['$', '$'], ['\\(', '\\)']],
-        displayMath: [['$$', '$$'], ['\\[', '\\]']]
-    },
-    svg: { fontCache: 'global' },
-    startup: {
-        typeset: false // Отключаем автоматический рендеринг при загрузке, будем вызывать вручную
-    }
-};
+    window.MathJax = {
+        tex: {
+            inlineMath: [['$', '$'], ['\\(', '\\)']],
+            displayMath: [['$$', '$$'], ['\\[', '\\]']]
+        },
+        svg: { fontCache: 'global' },
+        startup: {
+            typeset: false // Отключаем авто-сканирование при загрузке, так как сайт динамический
+        }
+    };
 </script>
 <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js" async></script>
 <style>
@@ -72,37 +72,15 @@ input[type="checkbox"]{width:22px;height:22px;cursor:pointer;accent-color:#4a6cf
 .form-group{margin-bottom:12px;}
 .form-group label{display:block;font-size:13px;color:#555;margin-bottom:4px;font-weight:bold;}
 .form-group input, .form-group select, .form-group textarea{width:100%;padding:10px;border:1px solid #cbd5e1;border-radius:8px;font-size:14px;font-family:inherit;}
-
-/* Таблицы для правил и задач */
 table.rule-table { width: 100%; border-collapse: collapse; margin: 10px 0; font-size: 13px; word-break: break-word; }
 table.rule-table th, table.rule-table td { border: 1px solid #cbd5e1; padding: 6px; text-align: left; vertical-align: top; }
 table.rule-table th { background-color: #f1f5f9; font-weight: bold; color: #333; }
-
-/* Сетка в 2 колонки для терминов и задач */
-.grid-container {
-    display: grid;
-    grid-template-columns: repeat(2, 1fr);
-    gap: 10px;
-    margin-bottom: 20px;
-}
-.grid-container .task-group-title {
-    grid-column: 1 / -1; /* Заголовки растягиваются на 2 колонки */
-    margin-top: 10px;
-    margin-bottom: 0px;
-}
+.grid-container { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; margin-bottom: 20px; }
+.grid-container .task-group-title { grid-column: 1 / -1; margin-top: 10px; margin-bottom: 0px; }
 .task-box { background: #fff; border-radius: 12px; padding: 16px; box-shadow: 0 2px 8px rgba(0,0,0,0.05); cursor: pointer; border-left: 3px solid #ccc; display: flex; flex-direction: column; justify-content: center;}
 .task-box h3 { font-size: 13px; margin-bottom: 6px; color: #1a1a2e; }
 .task-box p { font-size: 12px; color: #666; line-height: 1.4; }
-
-/* Адаптивность: на узких экранах возвращаем 1 колонку */
-@media (max-width: 400px) {
-    .grid-container {
-        grid-template-columns: 1fr;
-    }
-    .task-box h3 { font-size: 15px; }
-    .task-box p { font-size: 13px; }
-}
-
+@media (max-width: 400px) { .grid-container { grid-template-columns: 1fr; } .task-box h3 { font-size: 15px; } .task-box p { font-size: 13px; } }
 .task-group-title { font-size: 15px; font-weight: bold; color: #4a6cf7; margin: 20px 0 10px 0; padding-bottom: 5px; border-bottom: 1px solid #e5e7eb; }
 .latex-help { display: flex; flex-wrap: wrap; gap: 5px; margin-top: 5px; margin-bottom: 10px; max-height: 120px; overflow-y: auto; padding-bottom: 5px; }
 .latex-help button { background: #e2e8f0; border: none; padding: 5px 8px; border-radius: 6px; font-size: 12px; cursor: pointer; color: #333; }
@@ -131,11 +109,8 @@ table.rule-table th { background-color: #f1f5f9; font-weight: bold; color: #333;
 <button class="btn-clean" onclick="switchTab('tasks')">📝 Разбор задач</button>
 <button class="btn-clean" onclick="openAddCardModal()" style="margin-top:20px;">➕ Добавить карточку</button>
 <button class="btn-clean" onclick="switchTab('lit')" style="margin-bottom:20px;">📖 Литература</button>
-
-<!-- Подпись разработчиков -->
 <div style="text-align:center; color:#888; font-size:13px; margin-top:40px; line-height:1.5;">
-    Разработчики:<br>
-    Зотова Н.Д., Доронин Д.Д.
+    Разработчики:<br>Зотова Н.Д., Доронин Д.Д.
 </div>
 </div>
 
@@ -200,6 +175,19 @@ table.rule-table th { background-color: #f1f5f9; font-weight: bold; color: #333;
 <div id="myModal" class="modal" onclick="if(event.target===this)closeModal()"><div class="modal-content" id="modalBody"></div></div>
 
 <script>
+// --- УМНАЯ ФУНКЦИЯ ДЛЯ ОТРИСОВКИ ФОРМУЛ ---
+function typesetMath(element) {
+    if (!element) return;
+    if (window.MathJax && window.MathJax.typesetPromise) {
+        MathJax.typesetPromise([element]).catch(function (err) {
+            console.log('MathJax error:', err.message);
+        });
+    } else {
+        // Если MathJax еще не загрузился, пробуем снова через 100 мс
+        setTimeout(() => typesetMath(element), 100);
+    }
+}
+
 // ============ БАЗА ЗАДАЧ ============
 const TASKS = [
     { 
@@ -243,17 +231,14 @@ const TASKS = [
     }
 ];
 
-// ============ ТЕРМИНЫ (СГРУППИРОВАНЫ) ============
+// ============ ТЕРМИНЫ ============
 const TERMS = [
-    // Группа 1
     { group: "1. Базовые понятия и системы", id: "t1", title: "Статистическая физика", definition: "Раздел физики, изучающий свойства макроскопических систем (состоящих из большого числа частиц N >> 10^6) на основе статистического метода. Она является мостом между микроскопическим миром (атомы, электроны, фотоны) и макроскопической термодинамикой. Изучает, как из поведения отдельных частиц возникают макроскопические свойства (температура, давление, энтропия, теплоемкость). (См. учебник, Введение и раздел 1.1)." },
     { group: "1. Базовые понятия и системы", id: "t2", title: "Термодинамика", definition: "Феноменологическая теория тепловых явлений, базирующаяся на нескольких аксиомах (началах). Она описывает свойства макроскопических тел на основе обобщения экспериментальных данных, не рассматривая внутреннее строение веществ. Основные законы: закон сохранения энергии и принцип передачи тепла от горячего тела к холодному. (См. учебник, раздел 1.1)." },
     { group: "1. Базовые понятия и системы", id: "t3", title: "Термодинамическая система", definition: "Тело или система тел, состоящая из большого числа частей (N >> 10^6), обычно отделенная от окружающей среды некоторой границей раздела. (См. учебник, раздел 1.2.1)." },
     { group: "1. Базовые понятия и системы", id: "t4", title: "Гомогенная система", definition: "Однородная система, химический состав и физические свойства которой во всех её частях одинаковы или меняются непрерывно (между частями нет поверхностей раздела). (См. учебник, раздел 1.2.1)." },
     { group: "1. Базовые понятия и системы", id: "t5", title: "Гетерогенная система", definition: "Система, состоящая из нескольких гомогенных частей (фаз), разделённых поверхностью раздела. Однородные части (фазы) могут отличаться друг от друга по составу и свойствам, поэтому свойства гетерогенной системы изменяются скачкообразно при переходе из одной фазы в другую. (См. учебник, раздел 1.2.1)." },
     { group: "1. Базовые понятия и системы", id: "t6", title: "Термодинамическое состояние", definition: "Состояние термодинамической системы, однозначно определяемое набором макроскопических параметров (V — объём, p — давление, N — число частиц, E — энергия, T — температура и т.д.), которые характеризуют систему в целом и определяют все её свойства. (См. учебник, раздел 1.2.2)." },
-
-    // Группа 2
     { group: "2. Параметры и классификация систем", id: "t7", title: "Внешние параметры", definition: "Параметры, характеризующие внешние условия, в которых находится система. Они определяются ситуацией, например, для системы в замкнутом объёме в тепловом равновесии с окружающей средой внешними параметрами будут (N, V, T). (См. учебник, раздел 1.2.2)." },
     { group: "2. Параметры и классификация систем", id: "t8", title: "Внутренние параметры", definition: "Параметры, непосредственно определяющие характер расположения и движения внутренних частей системы. Они приходят к равновесию при заданных внешних параметрах (например, давление p, температура T, химический потенциал μ). (См. учебник, раздел 1.2.2)." },
     { group: "2. Параметры и классификация систем", id: "t9", title: "Изолированная система", definition: "Система, которая не обменивается с окружающей средой ни энергией, ни веществом (E = const, N = const). Всякая изолированная макроскопическая система с течением времени приходит в состояние термодинамического равновесия и самопроизвольно выйти из него не может. (См. учебник, раздел 1.2.2)." },
@@ -261,15 +246,11 @@ const TERMS = [
     { group: "2. Параметры и классификация систем", id: "t11", title: "Открытая система", definition: "Система, которая может обмениваться с окружающей средой как энергией, так и веществом. (См. учебник, раздел 1.2.2)." },
     { group: "2. Параметры и классификация систем", id: "t12", title: "Интенсивные параметры", definition: "Параметры, которые в равновесии одинаковы для всех частей системы. К ним относятся давление p, температура T, химический потенциал μ и т.д. Они не зависят от размера системы. (См. учебник, раздел 1.2.2)." },
     { group: "2. Параметры и классификация систем", id: "t13", title: "Экстенсивные параметры", definition: "Параметры (аддитивные), которые суммируются при объединении частей системы. К ним относятся объём V, число частиц N, энергия E и т.д. (См. учебник, раздел 1.2.2)." },
-
-    // Группа 3
     { group: "3. Термодинамические процессы", id: "t14", title: "Термодинамический процесс", definition: "Изменение термодинамических параметров системы с течением времени. Причиной возникновения процессов является изменение внешних параметров и переход системы в состояние нового термодинамического равновесия. (См. учебник, раздел 1.2.3)." },
     { group: "3. Термодинамические процессы", id: "t15", title: "Квазистатический процесс (обратимый)", definition: "Процесс, при котором система на любом этапе успевает прийти в новое положение равновесия, т.е. в любой момент времени состояние системы можно считать равновесным. Все термодинамические параметры определены для любого промежуточного состояния. Эти процессы обратимы. (См. учебник, раздел 1.2.3)." },
     { group: "3. Термодинамические процессы", id: "t16", title: "Неквазистатический процесс (необратимый)", definition: "Процесс, при котором переход к состоянию равновесия нельзя описать как последовательное изменение состояний. Отсутствие информации о промежуточных состояниях создает трудности теоретического описания, а неравновесность приводит к недополучению полезной механической работы. (См. учебник, раздел 1.2.3)." },
     { group: "3. Термодинамические процессы", id: "t17", title: "Равновесный процесс", definition: "Процесс, который протекает бесконечно медленно, так что система всё время находится в состоянии термодинамического равновесия. (Синоним: квазистатический процесс). (См. учебник, раздел 1.2.3)." },
     { group: "3. Термодинамические процессы", id: "t18", title: "Неравновесный процесс", definition: "Процесс, при котором система не успевает приходить в состояние равновесия. Он является необратимым. (Синоним: неквазистатический процесс). (См. учебник, раздел 1.2.3)." },
-
-    // Группа 4
     { group: "4. Аксиомы термодинамики", id: "t19", title: "Аксиома 1 (Существование температуры)", definition: "Всякая макроскопическая система, находящаяся в состоянии термодинамического равновесия, характеризуется специальным интенсивным параметром, называемым температурой, которая является единой для всех частей системы. Свойства: T(E→0) = 0; в равновесии T1 = T2 = ... = T; dT/dE ≥ 0. Следствие: В равновесии все части системы имеют одинаковую температуру, что позволяет использовать её как параметр состояния. (См. учебник, раздел 1.3.1)." },
     { group: "4. Аксиомы термодинамики", id: "t20", title: "Аксиома 2 (Первое начало термодинамики)", definition: "Внутренняя энергия системы E может измениться только за счёт обмена энергией с окружающей средой: механическим (работа внешних сил δA* = -pdV) или теплопередачей (количество теплоты δQ). Выражается уравнением: dE = δQ + δA*. Следствия: 1) Внутренняя энергия замкнутой системы постоянна (E = const). 2) Невозможен вечный двигатель первого рода (в замкнутом процессе тело не может совершить работу больше, чем полученное количество теплоты). (См. учебник, раздел 1.3.2)." },
     { group: "4. Аксиомы термодинамики", id: "t21", title: "Аксиома 3 (Второе начало термодинамики)", definition: "Всякая равновесная макроскопическая система характеризуется специальным экстенсивным параметром — энтропией S, которая при обратимом процессе связана с переданным количеством тепла соотношением dS = δQ/T. Свойства: S(E→0) = 0; dS/dE = 1/T > 0; энтропия изолированной неравновесной системы монотонно растёт, достигая максимума в равновесии. Следствия: 1) Неравенство Клаузиуса: dS ≥ δQ/T (равенство только для обратимых процессов). 2) Невозможен вечный двигатель второго рода (теплоту нельзя полностью превратить в работу в циклическом процессе). 3) Тепло не может самопроизвольно переходить от менее нагретого тела к более нагретому. 4) При тепловом контакте энергия передается от горячего тела к холодному. (См. учебник, раздел 1.3.3-1.3.4)." }
@@ -294,34 +275,29 @@ const BASE_FORMULAS=[
 {id:"8",t:"1. Основы термодинамики",n:"Свободная энергия Гельмгольца",l:"F = E - TS",d:"<b>Зачем нужна:</b> Максимальная работа в изотермическом процессе.<br><b>Тонкость:</b> Минимум F — равновесие при заданных V, T.",v:"<b>F</b> — свободная энергия;<br><b>E</b> — энергия;<br><b>T</b> — температура;<br><b>S</b> — энтропия."},
 {id:"9",t:"1. Основы термодинамики",n:"Энергия Гиббса",l:"G = E - TS + pV",d:"<b>Зачем нужна:</b> Потенциал при постоянных p, T.<br><b>Тонкость:</b> Минимум G — самопроизвольная реакция. G = μN.",v:"<b>G</b> — энергия Гиббса;<br><b>E</b> — энергия;<br><b>T</b> — температура;<br><b>S</b> — энтропия;<br><b>p</b> — давление;<br><b>V</b> — объем."},
 {id:"10",t:"1. Основы термодинамики",n:"Большой потенциал",l:"\\Omega = E - TS - \\mu N",d:"<b>Зачем нужна:</b> Для открытых систем.<br><b>Тонкость:</b> Ω = -kT ln Z̃.",v:"<b>Ω</b> — большой потенциал;<br><b>E</b> — энергия;<br><b>T</b> — температура;<br><b>S</b> — энтропия;<br><b>μ</b> — хим. потенциал;<br><b>N</b> — число частиц."},
-
 {id:"11",t:"2. Основы статфизики",n:"Среднее по времени",l:"\\langle A \\rangle = \\frac{1}{\\tau} \\int_0^\\tau A(t) dt",d:"<b>Зачем нужна:</b> Экспериментально измеряемая величина.<br><b>Тонкость:</b> По эргодической гипотезе равна среднему по ансамблю.",v:"<b>A</b> — величина;<br><b>τ</b> — время;<br><b>t</b> — время."},
 {id:"12",t:"2. Основы статфизики",n:"Дисперсия",l:"\\sigma^2 = \\langle X^2 \\rangle - \\langle X \\rangle^2",d:"<b>Зачем нужна:</b> Разброс значений.<br><b>Тонкость:</b> Относительная флуктуация ~ 1/√N.",v:"<b>σ²</b> — дисперсия;<br><b>X</b> — случайная величина."},
 {id:"13",t:"2. Основы статфизики",n:"Нормировка вероятностей",l:"\\sum_i P_i = 1",d:"<b>Зачем нужна:</b> Фундаментальное свойство вероятностей.",v:"<b>P_i</b> — вероятность."},
 {id:"14",t:"2. Основы статфизики",n:"Среднее значение",l:"\\langle A \\rangle = \\sum_i A_i P_i",d:"<b>Зачем нужна:</b> Среднее по ансамблю.",v:"<b>⟨A⟩</b> — среднее;<br><b>A_i</b> — значение;<br><b>P_i</b> — вероятность."},
 {id:"15",t:"2. Основы статфизики",n:"Функция распределения",l:"dP(q, p) = \\rho(q, p) d\\Gamma",d:"<b>Зачем нужна:</b> Вероятность попадания в элемент объема.",v:"<b>dP</b> — вероятность;<br><b>ρ</b> — плотность;<br><b>dΓ</b> — элемент объема."},
 {id:"16",t:"2. Основы статфизики",n:"Теорема Лиувилля",l:"\\frac{\\partial \\rho}{\\partial t} = -\\{\\rho, H\\}",d:"<b>Зачем нужна:</b> Плотность постоянна вдоль траектории.",v:"<b>ρ</b> — плотность;<br><b>H</b> — гамильтониан."},
-
 {id:"17",t:"3. Микроканонический ансамбль",n:"Вероятность микросостояния",l:"P_i = \\frac{1}{W}",d:"<b>Зачем нужна:</b> Все микросостояния равновероятны.",v:"<b>P_i</b> — вероятность;<br><b>W</b> — статвес."},
 {id:"18",t:"3. Микроканонический ансамбль",n:"Плотность состояний",l:"D(E) = \\frac{d\\Omega}{dE}",d:"<b>Зачем нужна:</b> Число состояний на интервал энергии.",v:"<b>D(E)</b> — плотность;<br><b>Ω</b> — число состояний."},
 {id:"19",t:"3. Микроканонический ансамбль",n:"Формула Больцмана",l:"S = k \\ln W",d:"<b>Зачем нужна:</b> Связь энтропии и числа состояний.",v:"<b>S</b> — энтропия;<br><b>k</b> — постоянная Больцмана;<br><b>W</b> — статвес."},
 {id:"20",t:"3. Микроканонический ансамбль",n:"Определение температуры",l:"\\frac{1}{T} = \\left( \\frac{\\partial S}{\\partial E} \\right)_{V,N}",d:"<b>Зачем нужна:</b> Температура через энтропию.",v:"<b>T</b> — температура;<br><b>S</b> — энтропия;<br><b>E</b> — энергия."},
 {id:"21",t:"3. Микроканонический ансамбль",n:"Определение давления",l:"p = T \\left( \\frac{\\partial S}{\\partial V} \\right)_{E,N}",d:"<b>Зачем нужна:</b> Давление через энтропию.",v:"<b>p</b> — давление;<br><b>T</b> — температура;<br><b>S</b> — энтропия;<br><b>V</b> — объем."},
 {id:"22",t:"3. Микроканонический ансамбль",n:"Химический потенциал",l:"\\mu = -T \\left( \\frac{\\partial S}{\\partial N} \\right)_{E,V}",d:"<b>Зачем нужна:</b> Хим. потенциал через энтропию.",v:"<b>μ</b> — хим. потенциал;<br><b>T</b> — температура;<br><b>S</b> — энтропия;<br><b>N</b> — число частиц."},
-
 {id:"23",t:"4. Канонические ансамбли",n:"Распределение Гиббса",l:"P_i = \\frac{1}{\\tilde{Z}} e^{(\\mu N_i - E_i)/kT}",d:"<b>Зачем нужна:</b> Для открытых систем.",v:"<b>P_i</b> — вероятность;<br><b>Z̃</b> — статсумма;<br><b>μ</b> — хим. потенциал;<br><b>N_i</b> — частицы;<br><b>E_i</b> — энергия;<br><b>T</b> — температура."},
 {id:"24",t:"4. Канонические ансамбли",n:"Большая статсумма",l:"\\tilde{Z} = \\sum_i e^{(\\mu N_i - E_i)/kT}",d:"<b>Зачем нужна:</b> Сумма по состояниям.",v:"<b>Z̃</b> — статсумма;<br><b>N_i</b> — частицы;<br><b>E_i</b> — энергия;<br><b>μ</b> — хим. потенциал."},
 {id:"25",t:"4. Канонические ансамбли",n:"Распределение Больцмана",l:"P_i = \\frac{1}{Z} e^{-E_i/kT}",d:"<b>Зачем нужна:</b> Вероятность состояния.",v:"<b>P_i</b> — вероятность;<br><b>Z</b> — статсумма;<br><b>E_i</b> — энергия;<br><b>T</b> — температура."},
 {id:"26",t:"4. Канонические ансамбли",n:"Каноническая статсумма",l:"Z = \\sum_i e^{-E_i/kT}",d:"<b>Зачем нужна:</b> Нормировочная сумма.",v:"<b>Z</b> — статсумма;<br><b>E_i</b> — энергия;<br><b>T</b> — температура."},
 {id:"27",t:"4. Канонические ансамбли",n:"Свободная энергия",l:"F = -kT \\ln Z",d:"<b>Зачем нужна:</b> Связь F и Z.",v:"<b>F</b> — свободная энергия;<br><b>Z</b> — статсумма."},
 {id:"28",t:"4. Канонические ансамбли",n:"Большой потенциал",l:"\\Omega = -kT \\ln \\tilde{Z}",d:"<b>Зачем нужна:</b> Связь Ω и Z̃.",v:"<b>Ω</b> — потенциал;<br><b>Z̃</b> — статсумма."},
-
 {id:"29",t:"5. Квантовая статистика",n:"Распределение Ферми-Дирака",l:"f(\\varepsilon) = \\frac{1}{e^{(\\varepsilon - \\mu)/kT} + 1}",d:"<b>Зачем нужна:</b> Для фермионов.<br><b>Тонкость:</b> Принцип Паули.",v:"<b>f(ε)</b> — вероятность;<br><b>ε</b> — энергия;<br><b>μ</b> — хим. потенциал."},
 {id:"30",t:"5. Квантовая статистика",n:"Распределение Бозе-Эйнштейна",l:"f(\\varepsilon) = \\frac{1}{e^{(\\varepsilon - \\mu)/kT} - 1}",d:"<b>Зачем нужна:</b> Для бозонов.<br><b>Тонкость:</b> Возможна бозе-конденсация.",v:"<b>f(ε)</b> — среднее число;<br><b>ε</b> — энергия;<br><b>μ</b> — хим. потенциал."},
 {id:"31",t:"5. Квантовая статистика",n:"Распределение Больцмана",l:"f(\\varepsilon) = e^{(\\mu - \\varepsilon)/kT}",d:"<b>Зачем нужна:</b> Классический предел.",v:"<b>f(ε)</b> — вероятность;<br><b>ε</b> — энергия;<br><b>μ</b> — хим. потенциал."},
 {id:"32",t:"5. Квантовая статистика",n:"Число частиц на уровне",l:"\\langle n_\\nu \\rangle = \\frac{1}{e^{(\\varepsilon_\\nu - \\mu)/kT} - \\zeta}",d:"<b>Зачем нужна:</b> Общая формула.<br><b>Тонкость:</b> ζ = +1 (бозоны), -1 (фермионы), 0 (классика).",v:"<b>n_ν</b> — число частиц;<br><b>ε_ν</b> — энергия;<br><b>μ</b> — хим. потенциал;<br><b>ζ</b> — параметр."},
 {id:"33",t:"5. Квантовая статистика",n:"Плотность состояний",l:"D(\\varepsilon) = V \\frac{2}{\\sqrt{\\pi}} \\left( \\frac{\\sqrt{2\\pi m}}{h} \\right)^3 \\sqrt{\\varepsilon}",d:"<b>Зачем нужна:</b> Число состояний на интервал энергии.",v:"<b>D(ε)</b> — плотность;<br><b>V</b> — объем;<br><b>m</b> — масса;<br><b>ε</b> — энергия."},
-
 {id:"34",t:"6. Идеальные газы",n:"Статистический интеграл",l:"Z^{(1)} = \\frac{V}{\\lambda_T^3}",d:"<b>Зачем нужна:</b> Статсумма одной частицы.",v:"<b>Z^(1)</b> — статсумма;<br><b>V</b> — объем;<br><b>λ_T</b> — длина волны."},
 {id:"35",t:"6. Идеальные газы",n:"Распределение Максвелла",l:"dP(p) = \\frac{4\\pi p^2}{(2\\pi mkT)^{3/2}} e^{-p^2/2mkT} dp",d:"<b>Зачем нужна:</b> Распределение по импульсу.",v:"<b>dP(p)</b> — вероятность;<br><b>p</b> — импульс;<br><b>m</b> — масса;<br><b>T</b> — температура."},
 {id:"36",t:"6. Идеальные газы",n:"Энергия Ферми",l:"E_F = \\frac{\\hbar^2}{2m} (3\\pi^2 n)^{2/3}",d:"<b>Зачем нужна:</b> Максимальная энергия при T=0.",v:"<b>E_F</b> — энергия Ферми;<br><b>m</b> — масса;<br><b>n</b> — концентрация."},
@@ -330,8 +306,6 @@ const BASE_FORMULAS=[
 {id:"39",t:"6. Идеальные газы",n:"Закон Стефана-Больцмана",l:"E = \\frac{4\\sigma}{c} V T^4",d:"<b>Зачем нужна:</b> Энергия излучения.",v:"<b>E</b> — энергия;<br><b>σ</b> — постоянная;<br><b>V</b> — объем;<br><b>T</b> — температура."},
 {id:"40",t:"6. Идеальные газы",n:"Теплоемкость Дебая",l:"C_V \\approx \\frac{12N\\pi^4}{5} \\left( \\frac{T}{\\theta_D} \\right)^3",d:"<b>Зачем нужна:</b> Теплоемкость при низких T.",v:"<b>C_V</b> — теплоемкость;<br><b>N</b> — число частиц;<br><b>T</b> — температура;<br><b>θ_D</b> — температура Дебая."},
 {id:"41",t:"6. Идеальные газы",n:"Закон Дюлонга-Пти",l:"C_V = 3R",d:"<b>Зачем нужна:</b> Теплоемкость при высоких T.",v:"<b>C_V</b> — теплоемкость;<br><b>R</b> — газовая постоянная."},
-
-// ПРАВИЛА И ОПРЕДЕЛЕНИЯ
 {id:"p1",t:"Правила и определения",n:"Микроскопические параметры системы",l:"<table class='rule-table'><tr><th>Параметр</th><th>Описание</th></tr><tr><td>Координаты (q)</td><td>Положение частицы в пространстве.</td></tr><tr><td>Импульсы (p)</td><td>Импульс частицы.</td></tr><tr><td>Энергия (ε_i)</td><td>Энергия отдельной частицы.</td></tr><tr><td>Спин</td><td>Внутренний момент частицы.</td></tr></table>",d:"<b>Зачем нужно:</b> Микропараметры полностью определяют микросостояние системы. Их число порядка 10^23 для макроскопических тел, поэтому используют статистическое усреднение для перехода к макропараметрам.",v:"<b>q</b> — координата;<br><b>p</b> — импульс;<br><b>ε_i</b> — энергия частицы."},
 {id:"p2",t:"Правила и определения",n:"Классификация термодинамических систем",l:"<table class='rule-table'><tr><th>Тип</th><th>Что фиксировано</th><th>Особенности</th></tr><tr><td>Изолированная</td><td>E, V, N = const</td><td>Не обменивается ни энергией, ни частицами. Микроканонический ансамбль.</td></tr><tr><td>Замкнутая</td><td>T, V, N = const</td><td>Обменивается энергией с термостатом, но не частицами. Канонический ансамбль.</td></tr><tr><td>Открытая</td><td>T, V, μ = const</td><td>Обменивается и энергией, и частицами. Большой канонический ансамбль.</td></tr></table>",d:"<b>Зачем нужно:</b> Тип системы определяет, какой ансамбль и какое распределение использовать.<br><b>Тонкость:</b> Изолированная система — идеализация, но она позволяет вывести все остальные распределения.",v:"<b>E</b> — энергия;<br><b>V</b> — объем;<br><b>N</b> — число частиц;<br><b>T</b> — температура;<br><b>μ</b> — хим. потенциал."},
 {id:"p3",t:"Правила и определения",n:"Виды термодинамических процессов",l:"<table class='rule-table'><tr><th>Процесс</th><th>Описание</th><th>Условие</th></tr><tr><td>Квазистатический</td><td>Бесконечно медленный, система всё время в равновесии.</td><td>dS = δQ/T</td></tr><tr><td>Неквазистатический</td><td>Быстрый, необратимый.</td><td>dS > δQ/T</td></tr><tr><td>Изотермический</td><td>При постоянной температуре.</td><td>T = const</td></tr><tr><td>Изобарный</td><td>При постоянном давлении.</td><td>p = const</td></tr><tr><td>Изохорный</td><td>При постоянном объеме.</td><td>V = const</td></tr><tr><td>Адиабатический</td><td>Без теплообмена.</td><td>δQ = 0</td></tr></table>",d:"<b>Зачем нужно:</b> Для квазистатических процессов работают формулы dS = δQ/T.<br><b>Тонкость:</b> Реальные процессы всегда необратимы.",v:"<b>dS</b> — изменение энтропии;<br><b>δQ</b> — теплота;<br><b>T</b> — температура;<br><b>p</b> — давление;<br><b>V</b> — объем."},
@@ -401,24 +375,6 @@ if(selectedCats.length===0 && !localStorage.getItem("cats_init")){
     selectedCats=[...allCats];localStorage.setItem("cats_init","true");save();
 }
 
-// ФУНКЦИЯ ДЛЯ БЕЗОПАСНОГО РЕНДЕРИНГА ФОРМУЛ
-function renderMath(element) {
-    if (!element) return;
-    if (window.MathJax && window.MathJax.typesetPromise) {
-        MathJax.typesetPromise([element]).catch(err => console.log('MathJax error:', err));
-    } else {
-        let retries = 0;
-        const interval = setInterval(() => {
-            if (window.MathJax && window.MathJax.typesetPromise) {
-                clearInterval(interval);
-                MathJax.typesetPromise([element]).catch(err => console.log('MathJax error:', err));
-            }
-            retries++;
-            if (retries > 50) clearInterval(interval);
-        }, 100);
-    }
-}
-
 function toggleCat(cat, e) {
     if(e) e.stopPropagation();
     if(selectedCats.includes(cat)){selectedCats=selectedCats.filter(c=>c!==cat)}else{selectedCats.push(cat)}
@@ -444,14 +400,12 @@ function renderTerms(){
     if(!container) return;
     let html = "";
     let groups = [...new Set(TERMS.map(t => t.group))];
-    
     groups.forEach(groupName => {
         html += `<div class="task-group-title" style="grid-column: 1 / -1;">${groupName}</div>`;
         TERMS.filter(t => t.group === groupName).forEach(term => {
             html += `<div class="task-box" onclick="openTermModal('${term.id}')"><h3>${term.title}</h3><p>${term.definition.substring(0, 60)}...</p></div>`;
         });
     });
-    
     container.innerHTML = html;
 }
 
@@ -465,7 +419,7 @@ function openTermModal(id){
         <button class="btn" onclick="closeModal()" style="margin-top:20px;">Закрыть</button>
     `;
     document.getElementById("myModal").classList.add("active");
-    renderMath(document.getElementById("modalBody"));
+    typesetMath(document.getElementById("modalBody"));
 }
 
 function renderTasks(){
@@ -500,7 +454,7 @@ function openTaskModal(title){
         <button class="btn" onclick="closeModal()" style="margin-top:20px;">Закрыть</button>
     `;
     document.getElementById("myModal").classList.add("active");
-    renderMath(document.getElementById("modalBody"));
+    typesetMath(document.getElementById("modalBody"));
 }
 
 function openLitModal(id){
@@ -513,16 +467,13 @@ function openLitModal(id){
         <button class="btn" onclick="closeModal()" style="background:#cbd5e1; color:#333; margin-top:10px;">Закрыть</button>
     `;
     document.getElementById("myModal").classList.add("active");
-    renderMath(document.getElementById("modalBody"));
+    typesetMath(document.getElementById("modalBody"));
 }
 
 function renderCats(){
     let ts=[...new Set(F.map(f=>f.t))];
     let html="";
-    
-    // Вставляем карточку "Термины" в список категорий
     html += `<div class="topic-card" onclick="switchTab('terms')"><div class="topic-card-left"><div style="font-weight:bold;font-size:16px;">📖 Термины</div><div style="color:#888;font-size:13px;margin-top:5px;">Основные понятия</div></div></div>`;
-    
     ts.forEach(t=>{
         let it=F.filter(f=>f.t===t),l=it.filter(f=>getS(f.id)==="learned").length;
         let isC=selectedCats.includes(t);
@@ -568,7 +519,7 @@ function openFormulaModal(id){
         <button class="btn" onclick="closeModal()">Закрыть</button>
     `;
     document.getElementById("myModal").classList.add("active");
-    if(!f.img && !isHtml) renderMath(document.getElementById("modalBody"));
+    typesetMath(document.getElementById("modalBody"));
 }
 
 function closeModal(){document.getElementById("myModal").classList.remove("active")}
@@ -647,11 +598,6 @@ function startTrainReview(){
     let aF=F.filter(f=>selectedCats.includes(f.t) && (seen.includes(f.id) || getH(f.id) > 0));
     if(aF.length===0){
         alert("Вы еще не просмотрели ни одной формулы в выбранных категориях. Сначала откройте категорию и нажмите на формулу, либо потренируйтесь в 'Учить формулы'.");
-        return
-        function startTrainReview(){
-    let aF=F.filter(f=>selectedCats.includes(f.t) && (seen.includes(f.id) || getH(f.id) > 0));
-    if(aF.length===0){
-        alert("Вы еще не просмотрели ни одной формулы в выбранных категориях. Сначала откройте категорию и нажмите на формулу, либо потренируйтесь в 'Учить формулы'.");
         return;
     }
     q=aF.slice().sort((a,b)=>{
@@ -713,7 +659,7 @@ function renderModeTrain() {
         html = `<div class="card-stack"><div class="swipe-card"><div style="font-size:16px;margin-bottom:15px;text-align:center;">Какое выражение имеет размерность <b>${item.dim}</b>?</div>${options}</div></div>`;
     }
     a.innerHTML = html;
-    renderMath(a);
+    typesetMath(a);
 }
 
 function checkModeAnswer(el, selected, correct) {
@@ -780,7 +726,7 @@ function renderTrain(){
             </div>
         </div>
         <div class="actions"><button class="btn-yes" onclick="swipeAction(true)">✓</button><button class="btn-no" onclick="swipeAction(false)">✕</button></div>`;
-        if(!f.img && !isHtml) renderMath(a);
+        typesetMath(a);
         setupSwipe(document.getElementById("card"));
         document.getElementById("ansInput").focus();
         document.getElementById("ansInput").addEventListener("keypress", function(e) { if(e.key === 'Enter') checkSwipeInput(); });
@@ -796,7 +742,7 @@ function renderTrain(){
         <button class="btn" id="tabQuiz" style="margin:0;padding:8px;background:#4a6cf7;color:#fff;" onclick="setMode('quiz')">Тест</button>
         </div>
         <div class="card-stack"><div class="swipe-card"><div class="formula-txt">${formulaHtml}</div><div style="font-size:14px;color:#888;margin-bottom:10px;">Что это за формула/правило?</div>${oh}</div></div>`;
-        if(!f.img && !isHtml) renderMath(a);
+        typesetMath(a);
     }
 }
 
